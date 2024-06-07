@@ -1,4 +1,4 @@
-package LyneCml
+package Complex
 
 import (
 	"log"
@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	sdb "github.com/PlayerR9/MyGoLib/Safe/Debugger"
-	ue "github.com/PlayerR9/MyGoLib/Units/Errors"
+	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
 
 // Memorer is the memory of the program.
