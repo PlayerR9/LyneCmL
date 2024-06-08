@@ -30,8 +30,7 @@ func parseArgs(p *Program, args []string) (*Command, []string, error) {
 	return command, parsedArgs, nil
 }
 
-func runBody(p *Program, args []string) error {
-
+func runBody(p *Program, args []string, opts ...RunModeOption) error {
 	command, parsedArgs, err := parseArgs(p, args[1:])
 	if err != nil {
 		return fmt.Errorf("could not parse arguments: %w", err)
@@ -69,10 +68,10 @@ func runBody(p *Program, args []string) error {
 	return nil
 }
 
-func (p *Program) Run(args []string) {
+func (p *Program) Run(args []string, opts ...RunModeOption) {
 	p.AddCommands(HelpCommandCmd)
 
-	err := runBody(p, args)
+	err := runBody(p, args, opts...)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 	} else {
