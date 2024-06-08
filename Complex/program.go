@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	sdb "github.com/PlayerR9/MyGoLib/Safe/Debugger"
+	sdb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
 
@@ -151,14 +151,6 @@ func (p *Program) Printf(format string, a ...interface{}) {
 	p.stdio.Printf(format, a...)
 }
 
-// Print prints items to the standard output.
-//
-// Parameters:
-//   - a: The items to print.
-func (p *Program) Print(a ...interface{}) {
-	p.stdio.Print(a...)
-}
-
 // Logln logs a line.
 //
 // Parameters:
@@ -174,14 +166,6 @@ func (p *Program) Logln(a ...interface{}) {
 //   - a: The items to log.
 func (p *Program) Logf(format string, a ...interface{}) {
 	p.logger.Printf(format, a...)
-}
-
-// Log logs items.
-//
-// Parameters:
-//   - a: The items to log.
-func (p *Program) Log(a ...interface{}) {
-	p.logger.Print(a...)
 }
 
 // GetCommand gets a command by its opcode.
