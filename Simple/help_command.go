@@ -9,7 +9,7 @@ func init() {
 		Name: "help",
 		Description: []string{
 			"Displays help information about the program",
-			"Usage: ZesseConv help",
+			"Usage: help",
 		},
 		Argument: NoArgument,
 		Run: func(p *Program, args []string) error {
