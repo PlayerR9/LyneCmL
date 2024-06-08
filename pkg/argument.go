@@ -1,4 +1,4 @@
-package Simple
+package pkg
 
 var (
 	// NoArgument is an argument that takes no arguments.

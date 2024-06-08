@@ -1,4 +1,4 @@
-package Simple
+package pkg
 
 var (
 	// DefaultOptions are the default options for a program.
