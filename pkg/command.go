@@ -1,6 +1,10 @@
 package pkg
 
-import "strings"
+import (
+	"strings"
+
+	util "github.com/PlayerR9/LyneCmL/pkg/util"
+)
 
 // RunFunc is a function that will be executed when the command is called.
 //
@@ -12,6 +16,7 @@ import "strings"
 //   - error: An error if the command failed to execute.
 type RunFunc func(p *Program, args []string) error
 
+// Command is a command that a program can execute.
 type Command struct {
 	// Name is the name of the command.
 	Name string
@@ -47,4 +52,38 @@ func (c *Command) fix() {
 			return nil
 		}
 	}
+}
+
+// DisplayHelp displays the help of the command.
+//
+// Returns:
+//   - []string: The lines of the help.
+func (c *Command) DisplayHelp() []string {
+	printer := util.NewPrinter()
+
+	// Command: <name>
+	printer.AddJoinedLine(" ", "Command:", c.Name)
+	printer.AddEmptyLine()
+
+	// Usage: <usage>
+	printer.AddJoinedLine(" ", "Usage:", c.Usage)
+
+	if len(c.Description) == 0 {
+		lines := printer.GetLines()
+
+		return lines
+	}
+
+	// Description:
+	// 	<description>
+	printer.AddEmptyLine()
+	printer.AddLine("Description:")
+
+	for _, line := range c.Description {
+		printer.AddJoinedLine("", "\t", line)
+	}
+
+	lines := printer.GetLines()
+
+	return lines
 }

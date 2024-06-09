@@ -66,6 +66,8 @@ func runBody(p *Program, args []string) error {
 	p.buffer.Start()
 	var wg sync.WaitGroup
 
+	tab := strings.Repeat(" ", p.Options.TabSize)
+
 	wg.Add(1)
 
 	go func() {
@@ -76,6 +78,8 @@ func runBody(p *Program, args []string) error {
 			if !ok {
 				break
 			}
+
+			str = strings.ReplaceAll(str, "\t", tab)
 
 			if strings.HasSuffix(str, "\n") {
 				fmt.Print(str)

@@ -175,9 +175,12 @@ func (a *Argument) validate(args []string) ([]string, error) {
 // Parameters:
 //   - f: The function to set.
 //
+// Returns:
+//   - *Argument: The argument.
+//
 // Behaviors:
 //   - If f is nil, it will be set to a function that does nothing.
-func (a *Argument) SetParseFunc(f ArgumentParseFunc) {
+func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
 	if f == nil {
 		f = func(p *Program, args []string) error {
 			return nil
@@ -185,4 +188,6 @@ func (a *Argument) SetParseFunc(f ArgumentParseFunc) {
 	}
 
 	a.parseFunc = f
+
+	return a
 }

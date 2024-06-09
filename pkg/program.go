@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	us "github.com/PlayerR9/MyGoLib/Units/Slice"
+	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+
+	util "github.com/PlayerR9/LyneCmL/pkg/util"
 )
 
 // Program is a program that can be run.
@@ -15,6 +19,9 @@ type Program struct {
 
 	// Brief is a brief description of the program.
 	Brief string
+
+	// Version is the version of the program.
+	Version string
 
 	// Description is a description of the program.
 	Description []string
@@ -124,4 +131,64 @@ func (p *Program) fix(arg string) {
 	p.commands = newCommands
 
 	p.Options.fix()
+}
+
+// DisplayHelp displays the help of the program.
+//
+// Returns:
+//   - []string: The lines of the help.
+//   - error: An error if the help could not be displayed.
+func (p *Program) DisplayHelp() ([]string, error) {
+	printer := util.NewPrinter()
+
+	// Program: <name> - <brief>
+	if p.Brief == "" {
+		printer.AddJoinedLine(" ", "Program:", p.Name)
+	} else {
+		printer.AddJoinedLine(" ", "Program:", p.Name, "-", p.Brief)
+	}
+	printer.AddEmptyLine()
+
+	// Version: <version>
+	if p.Version != "" {
+		printer.AddJoinedLine(" ", "Version:", p.Version)
+		printer.AddEmptyLine()
+	}
+
+	// Usage: <name> (command) [arguments]
+	printer.AddJoinedLine(" ", "Usage:", p.Name, "(command)", "[arguments]")
+	printer.AddEmptyLine()
+
+	// Description:
+	// 	<description>
+	if len(p.Description) > 0 {
+		printer.AddLine("Description:")
+		for _, line := range p.Description {
+			printer.AddJoinedLine("", "\t", line)
+		}
+		printer.AddEmptyLine()
+	}
+
+	// Commands:
+	// 	<usage> 	 <brief> (vertical alignment)
+	//    ...
+	table := make([][]string, 0, len(p.commands))
+	for _, command := range p.commands {
+		table = append(table, []string{command.Usage, command.Brief})
+	}
+
+	table, err := fs.TabAlign(table, 0, p.GetTabSize())
+	if err != nil {
+		return nil, ue.NewErrWhile("tab aligning", err)
+	}
+
+	printer.AddLine("Commands:")
+
+	for _, row := range table {
+		printer.AddJoinedLine("", "\t", row[0], row[1])
+	}
+
+	lines := printer.GetLines()
+
+	return lines, nil
 }
