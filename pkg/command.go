@@ -3,7 +3,7 @@ package pkg
 import (
 	"strings"
 
-	util "github.com/PlayerR9/LyneCmL/pkg/util"
+	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
 
 // RunFunc is a function that will be executed when the command is called.
@@ -28,7 +28,7 @@ type Command struct {
 	Brief string
 
 	// Description is a description of the command.
-	Description []string
+	Description *Description
 
 	// Argument is the argument of the command.
 	Argument *Argument
@@ -54,36 +54,56 @@ func (c *Command) fix() {
 	}
 }
 
-// DisplayHelp displays the help of the command.
+// FString returns the string representation of the command.
+//
+// Parameters:
+//   - trav: The traversor to use to format the command.
+//   - opts: The options to use to format the command.
 //
 // Returns:
-//   - []string: The lines of the help.
-func (c *Command) DisplayHelp() []string {
-	printer := util.NewPrinter()
+//   - error: An error if the command failed to format.
+func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
+	if trav == nil {
+		return nil
+	}
 
 	// Command: <name>
-	printer.AddJoinedLine(" ", "Command:", c.Name)
-	printer.AddEmptyLine()
+	err := trav.AddJoinedLine(" ", "Command:", c.Name)
+	if err != nil {
+		return err
+	}
+
+	trav.EmptyLine()
 
 	// Usage: <usage>
-	printer.AddJoinedLine(" ", "Usage:", c.Usage)
+	err = trav.AddJoinedLine(" ", "Usage:", c.Usage)
+	if err != nil {
+		return err
+	}
 
-	if len(c.Description) == 0 {
-		lines := printer.GetLines()
-
-		return lines
+	if c.Description == nil {
+		return nil
 	}
 
 	// Description:
 	// 	<description>
-	printer.AddEmptyLine()
-	printer.AddLine("Description:")
+	trav.EmptyLine()
 
-	for _, line := range c.Description {
-		printer.AddJoinedLine("", "\t", line)
+	err = trav.AddLine("Description:")
+	if err != nil {
+		return err
 	}
 
-	lines := printer.GetLines()
+	err = ffs.ApplyForm(
+		trav.GetConfig(
+			ffs.WithIncreasedIndent(),
+		),
+		trav,
+		c.Description,
+	)
+	if err != nil {
+		return err
+	}
 
-	return lines
+	return nil
 }

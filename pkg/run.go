@@ -1,11 +1,11 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
 
+	"github.com/PlayerR9/LyneCmL/pkg/util"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
@@ -22,12 +22,12 @@ import (
 //   - error: The error that occurred while parsing the arguments.
 func parseArgs(p *Program, args []string) (*Command, []string, error) {
 	if len(args) < 1 {
-		return nil, nil, errors.New("no command provided")
+		return nil, nil, util.NewErrNoCommand()
 	}
 
 	command, ok := p.commands[args[0]]
 	if !ok {
-		return nil, nil, fmt.Errorf("unknown command: %q", args[0])
+		return nil, nil, util.NewErrUnknownCommand(args[0])
 	}
 
 	parsedArgs, err := command.Argument.validate(args[1:])

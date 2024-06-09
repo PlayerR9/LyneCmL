@@ -2,7 +2,9 @@ package pkg
 
 import (
 	"fmt"
+	"strings"
 
+	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
 
@@ -16,18 +18,20 @@ func init() {
 		Name:  HelpCommandOpcode,
 		Usage: "help [command]",
 		Brief: "Displays help information about the program or a specific command",
-		Description: []string{
+		Description: NewDescription(
 			"If no command is specified, the help command will display help information about the program.",
 			"Otherwise, the help command will display help information about the specified command.",
-		},
+		),
 		Argument: AtMostNArgs(1),
 		Run: func(p *Program, args []string) error {
-			var lines []string
+			printer := ffs.NewStdPrinter(
+				ffs.NewFormatter(
+					ffs.NewIndentConfig(p.GetTab(), 0),
+				),
+			)
 
 			if len(args) == 0 {
-				var err error
-
-				lines, err = p.DisplayHelp()
+				err := ffs.Apply(printer, p)
 				if err != nil {
 					return err
 				}
@@ -43,13 +47,15 @@ func init() {
 					)
 				}
 
-				lines = command.DisplayHelp()
+				err := ffs.Apply(printer, command)
+				if err != nil {
+					return err
+				}
 			}
 
-			for _, line := range lines {
-				p.Println(line)
-			}
-			p.Println()
+			pages := ffs.Stringfy(printer.GetPages())
+
+			p.Println(strings.Join(pages, "\f"))
 
 			return nil
 		},

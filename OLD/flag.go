@@ -9,7 +9,7 @@ type Flag[T any] struct {
 	ParseFunc func(string) (T, error)
 
 	// Description is the description of the flag.
-	Description *Description
+	// Description *Description
 
 	// DefaultValue is the default value of the flag.
 	DefaultValue T

@@ -1,5 +1,9 @@
 package pkg
 
+import (
+	util "github.com/PlayerR9/LyneCmL/pkg/util"
+)
+
 var (
 	// NoArgument is an argument that takes no arguments.
 	NoArgument *Argument
@@ -162,9 +166,9 @@ func (a *Argument) validate(args []string) ([]string, error) {
 	}
 
 	if len(args) < left {
-		return nil, NewErrFewArguments(left, len(args))
+		return nil, util.NewErrFewArguments(left, len(args))
 	} else if len(args) > right {
-		return nil, NewErrManyArguments(right, len(args))
+		return nil, util.NewErrManyArguments(right, len(args))
 	}
 
 	return args, nil

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
-
-	util "github.com/PlayerR9/LyneCmL/pkg/util"
 )
 
 // Program is a program that can be run.
@@ -24,7 +23,7 @@ type Program struct {
 	Version string
 
 	// Description is a description of the program.
-	Description []string
+	Description *Description
 
 	// commands is a map of commands that the program can execute.
 	commands map[string]*Command
@@ -138,35 +137,63 @@ func (p *Program) fix(arg string) {
 // Returns:
 //   - []string: The lines of the help.
 //   - error: An error if the help could not be displayed.
-func (p *Program) DisplayHelp() ([]string, error) {
-	printer := util.NewPrinter()
+func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
+	if trav == nil {
+		return nil
+	}
+
+	var err error
 
 	// Program: <name> - <brief>
 	if p.Brief == "" {
-		printer.AddJoinedLine(" ", "Program:", p.Name)
+		err = trav.AddJoinedLine(" ", "Program:", p.Name)
 	} else {
-		printer.AddJoinedLine(" ", "Program:", p.Name, "-", p.Brief)
+		err = trav.AddJoinedLine(" ", "Program:", p.Name, "-", p.Brief)
 	}
-	printer.AddEmptyLine()
+	if err != nil {
+		return err
+	}
+
+	trav.EmptyLine()
 
 	// Version: <version>
 	if p.Version != "" {
-		printer.AddJoinedLine(" ", "Version:", p.Version)
-		printer.AddEmptyLine()
+		err := trav.AddJoinedLine(" ", "Version:", p.Version)
+		if err != nil {
+			return err
+		}
+
+		trav.EmptyLine()
 	}
 
 	// Usage: <name> (command) [arguments]
-	printer.AddJoinedLine(" ", "Usage:", p.Name, "(command)", "[arguments]")
-	printer.AddEmptyLine()
+	err = trav.AddJoinedLine(" ", "Usage:", p.Name, "(command)", "[arguments]")
+	if err != nil {
+		return err
+	}
+
+	trav.EmptyLine()
 
 	// Description:
 	// 	<description>
-	if len(p.Description) > 0 {
-		printer.AddLine("Description:")
-		for _, line := range p.Description {
-			printer.AddJoinedLine("", "\t", line)
+	if p.Description != nil {
+		err := trav.AddLine("Description:")
+		if err != nil {
+			return err
 		}
-		printer.AddEmptyLine()
+
+		err = ffs.ApplyForm(
+			trav.GetConfig(
+				ffs.WithIncreasedIndent(),
+			),
+			trav,
+			p.Description,
+		)
+		if err != nil {
+			return err
+		}
+
+		trav.EmptyLine()
 	}
 
 	// Commands:
@@ -177,18 +204,37 @@ func (p *Program) DisplayHelp() ([]string, error) {
 		table = append(table, []string{command.Usage, command.Brief})
 	}
 
-	table, err := fs.TabAlign(table, 0, p.GetTabSize())
+	table, err = fs.TabAlign(table, 0, p.GetTabSize())
 	if err != nil {
-		return nil, ue.NewErrWhile("tab aligning", err)
+		return ue.NewErrWhile("tab aligning", err)
 	}
 
-	printer.AddLine("Commands:")
-
-	for _, row := range table {
-		printer.AddJoinedLine("", "\t", row[0], row[1])
+	err = trav.AddLine("Commands:")
+	if err != nil {
+		return err
 	}
 
-	lines := printer.GetLines()
+	err = ffs.ApplyFormFunc(
+		trav.GetConfig(
+			ffs.WithIncreasedIndent(),
+		),
+		trav,
+		table,
+		func(trav *ffs.Traversor, table [][]string) error {
+			if trav == nil {
+				return nil
+			}
 
-	return lines, nil
+			for _, row := range table {
+				trav.AddJoinedLine("", row...)
+			}
+
+			return nil
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
