@@ -6,8 +6,8 @@ import (
 
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
-	us "github.com/PlayerR9/MyGoLib/Units/Slice"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	us "github.com/PlayerR9/MyGoLib/Units/slice"
 
 	util "github.com/PlayerR9/LyneCmL/pkg/util"
 )
