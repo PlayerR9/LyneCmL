@@ -113,7 +113,7 @@ type ErrUnknownCommand struct {
 func (e *ErrUnknownCommand) Error() string {
 	var builder strings.Builder
 
-	builder.WriteString("command ")
+	builder.WriteString("sub command ")
 	builder.WriteString(strconv.Quote(e.Command))
 	builder.WriteString(" not found")
 

@@ -2,28 +2,56 @@ package pkg
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
+	llq "github.com/PlayerR9/MyGoLib/ListLike/Queuer"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
-	us "github.com/PlayerR9/MyGoLib/Units/slice"
+	ufm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
 )
+
+var (
+	// ProgramDefaultArgument is the default argument for a program.
+	ProgramDefaultArgument *Argument
+
+	// ProgramDefaultRunFunc is the default run function for a program.
+	ProgramDefaultRunFunc RunFunc
+)
+
+func init() {
+	// f is a helper function that parses the arguments of a program.
+	//
+	// Parameters:
+	//   - p: The program to parse the arguments for.
+	//   - args: The arguments to parse.
+	//
+	// Returns:
+	//   - *Parsed: The parsed command.
+	//   - error: An error if the command could not be parsed.
+	f := func(p *Program, args []string) (any, int, error) {
+		if len(args) > 0 {
+			return nil, 0, fmt.Errorf("unexpected argument: %q", args[0])
+		}
+
+		return nil, 0, nil
+	}
+
+	ProgramDefaultArgument = &Argument{
+		bounds:    [2]int{1, 1},
+		parseFunc: f,
+	}
+
+	ProgramDefaultRunFunc = func(p *Program, args []string, data any) (any, error) {
+		return nil, nil
+	}
+}
 
 // Program is a program that can be run.
 type Program struct {
-	// Name is the name of the program.
-	Name string
-
-	// Brief is a brief description of the program.
-	Brief string
-
-	// Version is the version of the program.
-	Version string
-
-	// Description is a description of the program.
-	Description *Description
+	*Command
 
 	// commands is a map of commands that the program can execute.
 	commands map[string]*Command
@@ -31,33 +59,15 @@ type Program struct {
 	// buffer is a buffer that the program can use to store data.
 	buffer *sfb.Buffer[string]
 
+	// history is the history of the program.
+	// It is the messages that have been printed to the program.
+	history *llq.SafeQueue[string]
+
+	// Version is the version of the program.
+	Version string
+
 	// Options are the optional options of the program.
-	Options *ProgramOptions
-}
-
-// AddCommands adds commands to the program.
-//
-// Parameters:
-//   - commands: The commands to add to the program.
-//
-// Behaviors:
-//   - If commands is empty, no commands will be added.
-//   - Nil commands will be filtered out.
-//   - Commands with the same name will overwrite existing commands.
-//   - The help command overwrites anything so, never specify it.
-func (p *Program) AddCommands(commands ...*Command) {
-	commands = us.FilterNilValues(commands)
-	if len(commands) == 0 {
-		return
-	}
-
-	if p.commands == nil {
-		p.commands = make(map[string]*Command)
-	}
-
-	for _, command := range commands {
-		p.commands[command.Name] = command
-	}
+	Options *Configurations
 }
 
 // Println prints a line to the program's buffer.
@@ -101,35 +111,12 @@ func (p *Program) GetTab() string {
 	return strings.Repeat(" ", p.Options.TabSize)
 }
 
-// fix is a helper function that fixes the program in order to
-// make it easier to use.
-func (p *Program) fix(arg string) {
-	p.Name = strings.TrimSpace(p.Name)
-	if p.Name == "" {
-		p.Name = arg
-	}
-
-	p.Brief = strings.TrimSpace(p.Brief)
-
-	if p.Options == nil {
-		p.Options = DefaultOptions
-	}
-
-	newCommands := make(map[string]*Command)
-
-	for _, command := range p.commands {
-		command.fix()
-
-		if command.Name == "" {
-			continue
-		}
-
-		newCommands[command.Name] = command
-	}
-
-	p.commands = newCommands
-
-	p.Options.fix()
+// GetSpacing gets the spacing between columns.
+//
+// Returns:
+//   - int: The spacing between columns.
+func (p *Program) GetSpacing() int {
+	return p.Options.Spacing
 }
 
 // DisplayHelp displays the help of the program.
@@ -167,7 +154,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	}
 
 	// Usage: <name> (command) [arguments]
-	err = trav.AddJoinedLine(" ", "Usage:", p.Name, "(command)", "[arguments]")
+	err = trav.AddLine(p.Usage)
 	if err != nil {
 		return err
 	}
@@ -184,7 +171,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 		err = ffs.ApplyForm(
 			trav.GetConfig(
-				ffs.WithIncreasedIndent(),
+				ffs.WithModifiedIndent(1),
 			),
 			trav,
 			p.Description,
@@ -216,7 +203,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	err = ffs.ApplyFormFunc(
 		trav.GetConfig(
-			ffs.WithIncreasedIndent(),
+			ffs.WithModifiedIndent(1),
 		),
 		trav,
 		table,
@@ -234,6 +221,53 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ClearHistory clears the history of the program.
+//
+// This function is thread-safe.
+func (p *Program) ClearHistory() {
+	p.history.Clear()
+}
+
+// SavePartial saves the current history to a file in the partials directory.
+//
+// This can be used for logging/debugging purposes and/or to save the state of
+// the program or evaluate the program's output.
+//
+// This function is thread-safe.
+//
+// Parameters:
+//   - filename: The name of the file to save the partial to.
+//
+// Returns:
+//   - error: An error if the partial could not be saved.
+func (p *Program) SavePartial(filename string) error {
+	iter := p.history.Iterator()
+
+	fullpath := path.Join("partials", filename)
+
+	fw := ufm.NewFileWriter(fullpath)
+
+	err := fw.Open()
+	if err != nil {
+		return err
+	}
+	defer fw.Close()
+
+	for {
+		line, err := iter.Consume()
+		if err != nil {
+			break
+		}
+
+		err = fw.AppendLine(line)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

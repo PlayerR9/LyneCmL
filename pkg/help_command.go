@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	// HelpCommandCmd is the help command.
-	HelpCommandCmd *Command
+	// HelpCmd is the help command.
+	HelpCmd *Command
 )
 
 func init() {
-	HelpCommandCmd = &Command{
-		Name:  HelpCommandOpcode,
+	HelpCmd = &Command{
+		Name:  HelpCmdOpcode,
 		Usage: "help [command]",
 		Brief: "Displays help information about the program or a specific command",
 		Description: NewDescription(
@@ -23,17 +23,18 @@ func init() {
 			"Otherwise, the help command will display help information about the specified command.",
 		),
 		Argument: AtMostNArgs(1),
-		Run: func(p *Program, args []string) error {
+		Run: func(p *Program, args []string, data any) (any, error) {
 			printer := ffs.NewStdPrinter(
 				ffs.NewFormatter(
 					ffs.NewIndentConfig(p.GetTab(), 0),
+					ffs.NewFormatterConfig(p.GetTabSize(), p.GetSpacing()),
 				),
 			)
 
 			if len(args) == 0 {
 				err := ffs.Apply(printer, p)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			} else {
 				// Display help of a specific command.
@@ -41,7 +42,7 @@ func init() {
 
 				command, ok := p.commands[name]
 				if !ok {
-					return ue.NewErrInvalidUsage(
+					return nil, ue.NewErrInvalidUsage(
 						fmt.Errorf("command %q is not a valid command", name),
 						"Use command \"help\" to see the list of available commands",
 					)
@@ -49,7 +50,7 @@ func init() {
 
 				err := ffs.Apply(printer, command)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 
@@ -57,7 +58,7 @@ func init() {
 
 			p.Println(strings.Join(pages, "\f"))
 
-			return nil
+			return nil, nil
 		},
 	}
 }

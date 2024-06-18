@@ -23,8 +23,10 @@ func init() {
 //   - args: The arguments that were passed to the argument.
 //
 // Returns:
+//   - any: The result of the arguments.
+//   - int: The number of arguments that were parsed.
 //   - error: An error if the argument failed to execute.
-type ArgumentParseFunc func(p *Program, args []string) error
+type ArgumentParseFunc func(p *Program, args []string) (any, int, error)
 
 var (
 	// NoParseFunc is a function that does nothing.
@@ -32,8 +34,8 @@ var (
 )
 
 func init() {
-	NoParseFunc = func(p *Program, args []string) error {
-		return nil
+	NoParseFunc = func(p *Program, args []string) (any, int, error) {
+		return nil, len(args), nil
 	}
 }
 
@@ -183,12 +185,10 @@ func (a *Argument) validate(args []string) ([]string, error) {
 //   - *Argument: The argument.
 //
 // Behaviors:
-//   - If f is nil, it will be set to a function that does nothing.
+//   - If f is nil, it will be set to NoParseFunc.
 func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
 	if f == nil {
-		f = func(p *Program, args []string) error {
-			return nil
-		}
+		f = NoParseFunc
 	}
 
 	a.parseFunc = f
