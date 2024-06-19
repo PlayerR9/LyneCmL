@@ -6,18 +6,18 @@ var (
 	// === Default Options ===
 	// TabSize: 3
 	// Spacing: 1
-	DefaultOptions *Configurations
+	DefaultOptions *Configs
 )
 
 func init() {
-	DefaultOptions = &Configurations{
+	DefaultOptions = &Configs{
 		TabSize: 3,
 		Spacing: 1,
 	}
 }
 
-// Configurations are the optional options for a program.
-type Configurations struct {
+// Configs are the optional options for a program.
+type Configs struct {
 	// TabSize is the size of a tab character.
 	TabSize int
 
@@ -26,7 +26,7 @@ type Configurations struct {
 }
 
 // fix fixes the program options.
-func (po *Configurations) fix() {
+func (po *Configs) fix() {
 	if po.TabSize <= 0 {
 		po.TabSize = 3
 	}

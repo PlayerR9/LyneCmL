@@ -6,6 +6,7 @@ import (
 
 	util "github.com/PlayerR9/LyneCmL/Simple/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
 
@@ -215,9 +216,28 @@ func handleCmd(p *Program, args []string, cmd *Command) (*Parsed, error) {
 		return nil, err
 	}
 
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+
+		err = ue.NewErrPanic(r)
+
+		err := p.Panic(err)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	data, n, err := cmd.Argument.parseFunc(p, validatedArgs)
 	if err != nil {
 		return nil, err
+	}
+
+	ok := p.display.IsDone()
+	if ok {
+		return nil, nil
 	}
 
 	if n < 0 {

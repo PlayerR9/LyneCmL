@@ -2,12 +2,9 @@ package Simple
 
 import (
 	"fmt"
-	"sync"
 
+	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	util "github.com/PlayerR9/LyneCmL/Simple/util"
-	llq "github.com/PlayerR9/MyGoLib/ListLike/Queuer"
-	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
-	"golang.org/x/net/context"
 )
 
 const (
@@ -30,40 +27,17 @@ func ExecuteProgram(p *Program, args []string) error {
 		p.Name = args[0]
 	}
 
-	p.buffer = sfb.NewBuffer[any]()
+	displayConfigs := &pd.Configs{
+		TabSize: p.Options.TabSize,
+		Spacing: p.Options.Spacing,
+	}
 
-	p.history = llq.NewSafeQueue[string]()
+	display := pd.NewDisplay(displayConfigs)
 
-	p.buffer.Start()
+	p.display = display
 
-	ctx, cancel := context.WithCancel(context.Background())
-	p.ctx = ctx
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				msg, ok := p.buffer.Receive()
-				if !ok {
-					return
-				}
-
-				err := p.msgHandler(msg)
-				if err != nil {
-					fmt.Println("Error:", err)
-					cancel()
-					return
-				}
-			}
-		}
-	}()
+	p.display.Start()
+	defer p.display.Close()
 
 	args = args[1:]
 
@@ -74,14 +48,8 @@ func ExecuteProgram(p *Program, args []string) error {
 
 	_, err := parseArgs(p, args[1:], cmd)
 	if err != nil {
-		cancel()
 		return fmt.Errorf("in command %q: %w", cmd.Name, err)
 	}
-
-	p.buffer.Close()
-	wg.Wait()
-
-	cancel()
 
 	return err
 }

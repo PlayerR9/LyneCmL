@@ -1,13 +1,14 @@
 package Complex
 
 import (
-	"context"
+	"errors"
+	"fmt"
+	"path"
 	"strings"
 
+	pd "github.com/PlayerR9/LyneCmL/Complex/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	llq "github.com/PlayerR9/MyGoLib/ListLike/Queuer"
-	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
@@ -45,18 +46,11 @@ type Program struct {
 	// commands is a map of commands that the program can execute.
 	commands map[string]*Command
 
-	// buffer is a buffer that the program can use to store data.
-	buffer *sfb.Buffer[any]
-
-	// history is the history of the program.
-	// It is the messages that have been printed to the program.
-	history *llq.SafeQueue[string]
-
 	// Options are the optional options of the program.
-	Options *Configurations
+	Options *Configs
 
-	// ctx is the context of the program.
-	ctx context.Context
+	// display is the display of the program.
+	display *pd.Display
 }
 
 // GenerateProgram creates a new program with the given command, version, options,
@@ -252,4 +246,139 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	}
 
 	return nil
+}
+
+// Println prints a line to the program's buffer.
+//
+// Parameters:
+//   - args: The items to print.
+//
+// Returns:
+//   - error: An error if the program stopped abruptly.
+//     (due to call to Program.Panic())
+func (p *Program) Println(args ...interface{}) error {
+	str := fmt.Sprintln(args...)
+	str = strings.TrimSuffix(str, "\n")
+
+	msg := pd.NewTextMsg(str)
+
+	err := p.display.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Printf prints a formatted line to the program's buffer.
+//
+// Parameters:
+//   - format: The format of the line.
+//   - args: The items to print.
+//
+// Returns:
+//   - error: An error if the program stopped abruptly
+//     (due to call to Program.Panic())
+func (p *Program) Printf(format string, args ...interface{}) error {
+	str := fmt.Sprintf(format, args...)
+
+	msg := pd.NewTextMsg(str)
+
+	err := p.display.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ClearHistory clears the history of the program.
+//
+// Returns:
+//   - error: An error if the history could not be cleared
+//     (due to call to Program.Panic())
+func (p *Program) ClearHistory() error {
+	msg := pd.NewClearHistoryMsg()
+
+	err := p.display.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SavePartial saves the current history to a file in the partials directory.
+//
+// This can be used for logging/debugging purposes and/or to save the state of
+// the program or evaluate the program's output.
+//
+// Parameters:
+//   - filename: The name of the file to save the partial to.
+//
+// Returns:
+//   - error: An error if the partial could not be saved
+//     (due to call to Program.Panic()) or if the filename is empty.
+func (p *Program) SavePartial(filename string) error {
+	if filename == "" {
+		return errors.New("filename is empty")
+	}
+
+	fullpath := path.Join("partials", filename)
+
+	msg := pd.NewStoreHistoryMsg(fullpath)
+
+	err := p.display.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Panic causes the program to abruptly exit with the given error.
+//
+// Parameters:
+//   - err: The error that caused the abrupt exit.
+//
+// Returns:
+//   - error: An error if the abrupt exit could not be displayed
+//     (due to call to previous Program.Panic() calls).
+func (p *Program) Panic(err error) error {
+	msg := pd.NewAbruptExitMsg(err)
+
+	err = p.display.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Input requests input from the user.
+//
+// Parameters:
+//   - text: The text to display to the user.
+//
+// Returns:
+//   - string: The input from the user.
+//   - error: An error if the input failed.
+//
+// Errors:
+//   - If the context is done.
+//   - If input could not be received.
+func (p *Program) Input(text string) (string, error) {
+	msg := pd.NewInputMsg(text)
+
+	err := p.display.Send(msg)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := msg.Receive()
+	if err != nil {
+		return "", err
+	}
+
+	return resp, nil
 }
