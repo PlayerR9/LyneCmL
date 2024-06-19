@@ -2,7 +2,6 @@ package display
 
 import (
 	"errors"
-	"fmt"
 )
 
 type Msger interface{}
@@ -91,10 +90,22 @@ func NewAbruptExitMsg(reason error) *AbruptExitMsg {
 	}
 }
 
+type InputType int
+
+const (
+	ItLine InputType = iota
+	ItNumber
+	ItAnyKey
+	ItString
+)
+
 // InputMsg is a message that requests input from the user.
 type InputMsg struct {
 	// text is the text to display to the user.
 	text string
+
+	// inputType is the type of input to receive.
+	inputType InputType
 
 	// receiveCh is the channel to receive the input on.
 	receiveCh chan any
@@ -107,7 +118,7 @@ type InputMsg struct {
 //
 // Returns:
 //   - *InputMsg: The new InputMsg.
-func NewInputMsg(text string) *InputMsg {
+func NewInputMsg(text string, inputType InputType) *InputMsg {
 	ch := make(chan any)
 
 	return &InputMsg{
@@ -119,22 +130,31 @@ func NewInputMsg(text string) *InputMsg {
 // Receive receives the input from the user.
 //
 // Returns:
-//   - string: The input from the user.
+//   - any: The input from the user.
 //   - error: An error if the input failed.
-func (im *InputMsg) Receive() (string, error) {
+func (im *InputMsg) Receive() (any, error) {
 	defer close(im.receiveCh)
 
 	input, ok := <-im.receiveCh
 	if !ok {
-		return "", errors.New("input channel closed")
+		return nil, errors.New("input channel closed")
 	}
 
-	switch input := input.(type) {
-	case error:
-		return "", input
-	case string:
-		return input, nil
-	default:
-		return "", fmt.Errorf("unexpected input type: %T", input)
+	reason, ok := input.(error)
+	if ok {
+		return nil, reason
 	}
+
+	switch im.inputType {
+	case ItLine:
+		return input.(string), nil
+	case ItNumber:
+		return input.(int), nil
+	case ItAnyKey:
+		return input.(rune), nil
+	case ItString:
+		return input.(string), nil
+	}
+
+	return nil, errors.New("unexpected input type")
 }

@@ -3,6 +3,7 @@ package display
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -41,6 +42,10 @@ type Display struct {
 
 	// configs is the configurations of the display.
 	configs *Configs
+
+	evChan chan tcell.Event
+
+	keyChan chan tcell.EventKey
 }
 
 // NewDisplay creates a new display with the given configurations.
@@ -68,6 +73,7 @@ func NewDisplay(config *Configs) (*Display, error) {
 		return nil, fmt.Errorf("failed to initialize screen: %w", err)
 	}
 
+	screen.EnableMouse()
 	screen.SetStyle(config.Background)
 
 	screen.Clear()
@@ -88,9 +94,14 @@ func NewDisplay(config *Configs) (*Display, error) {
 
 // Start starts the display.
 func (d *Display) Start() {
+	d.evChan = make(chan tcell.Event)
+	d.keyChan = make(chan tcell.EventKey)
+
 	d.buffer.Start()
 
 	d.wg.Add(1)
+
+	go d.eventListener()
 
 	go d.msgListener()
 }
@@ -100,6 +111,12 @@ func (d *Display) Close() {
 	d.buffer.Close()
 
 	d.screen.Fini()
+
+	close(d.evChan)
+	d.evChan = nil
+
+	close(d.keyChan)
+	d.keyChan = nil
 
 	d.cancel()
 	d.wg.Wait()
@@ -113,6 +130,13 @@ func (d *Display) msgListener() {
 		select {
 		case <-d.ctx.Done():
 			return
+		case ev := <-d.evChan:
+			switch ev := ev.(type) {
+			case *tcell.EventResize:
+				d.resizeEvent()
+			case *tcell.EventKey:
+				d.keyChan <- *ev
+			}
 		default:
 			msg, ok := d.buffer.Receive()
 			if !ok {
@@ -192,12 +216,23 @@ func (d *Display) msgHandler(msg any) error {
 
 		return msg.reason
 	case *InputMsg:
-		if msg.text != "" {
-			d.drawScreen(msg.text)
-		}
+		d.dealWithInputMsg(msg)
+	default:
+		return fmt.Errorf("unknown message type: %T", msg)
+	}
 
-		d.drawScreen("> ")
+	return nil
+}
 
+func (d *Display) dealWithInputMsg(msg *InputMsg) error {
+	if msg.text != "" {
+		d.drawScreen(msg.text)
+	}
+
+	d.drawScreen("> ")
+
+	switch msg.inputType {
+	case ItLine:
 		var input string
 
 		_, err := fmt.Scanln(&input)
@@ -206,8 +241,105 @@ func (d *Display) msgHandler(msg any) error {
 		} else {
 			msg.receiveCh <- input
 		}
+	case ItNumber:
+		if msg.text != "" {
+			d.drawScreen(msg.text)
+		}
+
+		key, ok := <-d.keyChan
+		if !ok {
+			msg.receiveCh <- fmt.Errorf("key channel closed")
+		}
+
+		switch key.Key() {
+		case tcell.KeyRune:
+			msg.receiveCh <- key.Rune()
+		case tcell.KeyEnter:
+			msg.receiveCh <- '\n'
+		case tcell.KeyBackspace, tcell.KeyBackspace2:
+			msg.receiveCh <- '\b'
+		default:
+			msg.receiveCh <- fmt.Errorf("unexpected key: %v", key)
+		}
+	case ItAnyKey:
+		var builder strings.Builder
+
+		for {
+			key, ok := <-d.keyChan
+			if !ok {
+				break
+			}
+
+			kk := key.Key()
+
+			if kk == tcell.KeyEnter {
+				break
+			}
+
+			if kk == tcell.KeyBackspace || kk == tcell.KeyBackspace2 {
+				if builder.Len() > 0 {
+					str := builder.String()
+					builder.Reset()
+
+					builder.WriteString(str[:len(str)-1])
+				}
+
+				continue
+			}
+
+			r := key.Rune()
+
+			if r < '0' || r > '9' {
+				continue
+			}
+
+			builder.WriteRune(r)
+		}
+
+		num, err := strconv.Atoi(builder.String())
+		if err != nil {
+			msg.receiveCh <- err
+		} else {
+			msg.receiveCh <- num
+		}
+	case ItString:
+		var builder strings.Builder
+
+		for {
+			key, ok := <-d.keyChan
+			if !ok {
+				break
+			}
+
+			kk := key.Key()
+
+			if kk == tcell.KeyEnter {
+				break
+			}
+
+			if kk == tcell.KeyBackspace || kk == tcell.KeyBackspace2 {
+				if builder.Len() > 0 {
+					str := builder.String()
+					builder.Reset()
+
+					builder.WriteString(str[:len(str)-1])
+				}
+
+				continue
+			}
+
+			r := key.Rune()
+
+			if r < ' ' || r > '~' {
+				break
+			}
+
+			builder.WriteRune(r)
+		}
+
+		msg.receiveCh <- builder.String()
 	default:
-		return fmt.Errorf("unknown message type: %T", msg)
+		return fmt.Errorf("unknown input type: %v", msg.inputType)
 	}
 
 	return nil
@@ -272,4 +404,23 @@ func (d *Display) drawScreen(line string) {
 	}
 
 	d.screen.Show()
+}
+
+// eventListener is a helper method that listens for events.
+func (d *Display) eventListener() {
+	for {
+		ev := d.screen.PollEvent()
+		if ev == nil {
+			break
+		}
+
+		d.evChan <- ev
+	}
+}
+
+// resizeEvent is a helper method that handles a resize event.
+func (d *Display) resizeEvent() {
+	d.width, d.height = d.screen.Size()
+
+	// d.table = ddt.NewDrawTable(d.width, d.height)
 }

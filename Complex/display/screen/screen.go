@@ -2,8 +2,6 @@ package screen
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -23,9 +21,6 @@ type Display struct {
 
 	// height is the height of the display.
 	height int
-
-	// evChan is the channel of events.
-	evChan chan tcell.Event
 
 	// wg is the wait group of the display.
 	wg sync.WaitGroup
@@ -86,20 +81,11 @@ func NewDisplay(bgStyle tcell.Style) (*Display, error) {
 
 // Start starts the display.
 func (d *Display) Start() {
-	d.evChan = make(chan tcell.Event)
 	d.errChan = make(chan error, 1)
 	d.keyChan = make(chan tcell.EventKey)
 
 	d.shouldClose = rws.NewSubject[bool](false)
 	d.element = rws.NewSubject[ddt.Displayer](nil)
-
-	d.screen.EnableMouse()
-
-	go d.eventListener()
-
-	d.wg.Add(1)
-
-	go d.mainListener()
 }
 
 // Close closes the display.
@@ -112,9 +98,6 @@ func (d *Display) Close() {
 	d.errChan = nil
 
 	d.screen.Fini()
-
-	close(d.evChan)
-	d.evChan = nil
 
 	close(d.keyChan)
 	d.keyChan = nil
@@ -144,18 +127,7 @@ func (d *Display) Draw(elem ddt.Displayer) {
 	d.drawScreen()
 }
 
-// eventListener is a helper method that listens for events.
-func (d *Display) eventListener() {
-	for {
-		ev := d.screen.PollEvent()
-		if ev == nil {
-			break
-		}
-
-		d.evChan <- ev
-	}
-}
-
+/*
 // mainListener is a helper method that listens for events.
 func (d *Display) mainListener() {
 	defer d.wg.Done()
@@ -167,38 +139,11 @@ func (d *Display) mainListener() {
 				return
 			}
 		case ev := <-d.evChan:
-			switch ev := ev.(type) {
-			case *tcell.EventResize:
-				d.resizeEvent()
-			case *tcell.EventKey:
-				d.keyChan <- *ev
-			}
+
 		}
 	}
 }
-
-// ListenForKey listens for a key event.
-//
-// Returns:
-//   - rune: The key.
-//   - bool: True if the key was received, false otherwise.
-func (d *Display) ListenForKey() (rune, bool) {
-	key, ok := <-d.keyChan
-	if !ok {
-		return 0, false
-	}
-
-	switch key.Key() {
-	case tcell.KeyRune:
-		return key.Rune(), true
-	case tcell.KeyEnter:
-		return '\n', true
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
-		return '\b', true
-	}
-
-	return 0, false
-}
+*/
 
 // resizeEvent is a helper method that handles a resize event.
 func (d *Display) resizeEvent() {
@@ -245,52 +190,4 @@ func (d *Display) drawScreen() {
 
 	d.screen.Show()
 	time.Sleep(time.Millisecond * 100)
-}
-
-// ListenForNumber listens for a number.
-//
-// Returns:
-//   - int: The number.
-//   - error: An error if the number could not be received.
-func (d *Display) ListenForNumber() (int, error) {
-	var builder strings.Builder
-
-	for {
-		key, ok := <-d.keyChan
-		if !ok {
-			break
-		}
-
-		kk := key.Key()
-
-		if kk == tcell.KeyEnter {
-			break
-		}
-
-		if kk == tcell.KeyBackspace || kk == tcell.KeyBackspace2 {
-			if builder.Len() > 0 {
-				str := builder.String()
-				builder.Reset()
-
-				builder.WriteString(str[:len(str)-1])
-			}
-
-			continue
-		}
-
-		r := key.Rune()
-
-		if r < '0' || r > '9' {
-			continue
-		}
-
-		builder.WriteRune(r)
-	}
-
-	num, err := strconv.Atoi(builder.String())
-	if err != nil {
-		return 0, err
-	}
-
-	return num, nil
 }

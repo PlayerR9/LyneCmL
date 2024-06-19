@@ -368,7 +368,7 @@ func (p *Program) Panic(err error) error {
 //   - If the context is done.
 //   - If input could not be received.
 func (p *Program) Input(text string) (string, error) {
-	msg := pd.NewInputMsg(text)
+	msg := pd.NewInputMsg(text, pd.ItLine)
 
 	err := p.display.Send(msg)
 	if err != nil {
@@ -380,5 +380,5 @@ func (p *Program) Input(text string) (string, error) {
 		return "", err
 	}
 
-	return resp, nil
+	return resp.(string), nil
 }
