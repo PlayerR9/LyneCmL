@@ -1,4 +1,4 @@
-package pkg
+package Complex
 
 import (
 	"fmt"
@@ -56,7 +56,10 @@ func init() {
 
 			pages := ffs.Stringfy(printer.GetPages())
 
-			p.Println(strings.Join(pages, "\f"))
+			err := p.Println(strings.Join(pages, "\f"))
+			if err != nil {
+				return nil, err
+			}
 
 			return nil, nil
 		},

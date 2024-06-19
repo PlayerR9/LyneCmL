@@ -1,8 +1,7 @@
-package pkg
+package Complex
 
 import (
-	"fmt"
-	"path"
+	"context"
 	"strings"
 
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
@@ -10,89 +9,118 @@ import (
 	llq "github.com/PlayerR9/MyGoLib/ListLike/Queuer"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
-	ufm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
+	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
 
 var (
-	// ProgramDefaultArgument is the default argument for a program.
-	ProgramDefaultArgument *Argument
-
-	// ProgramDefaultRunFunc is the default run function for a program.
-	ProgramDefaultRunFunc RunFunc
+	// FilterInvalidCmd is a filter that filters out invalid commands.
+	FilterInvalidCmd us.PredicateFilter[*Command]
 )
 
 func init() {
-	// f is a helper function that parses the arguments of a program.
-	//
-	// Parameters:
-	//   - p: The program to parse the arguments for.
-	//   - args: The arguments to parse.
-	//
-	// Returns:
-	//   - *Parsed: The parsed command.
-	//   - error: An error if the command could not be parsed.
-	f := func(p *Program, args []string) (any, int, error) {
-		if len(args) > 0 {
-			return nil, 0, fmt.Errorf("unexpected argument: %q", args[0])
+	FilterInvalidCmd = func(cmd *Command) bool {
+		if cmd == nil {
+			return false
 		}
 
-		return nil, 0, nil
-	}
-
-	ProgramDefaultArgument = &Argument{
-		bounds:    [2]int{1, 1},
-		parseFunc: f,
-	}
-
-	ProgramDefaultRunFunc = func(p *Program, args []string, data any) (any, error) {
-		return nil, nil
+		cmd.Name = strings.TrimSpace(cmd.Name)
+		return cmd.Name != ""
 	}
 }
 
 // Program is a program that can be run.
 type Program struct {
-	*Command
+	// Name is the name of the command.
+	Name string
+
+	// Brief is a brief description of the command.
+	Brief string
+
+	// Description is a description of the command.
+	Description *Description
+
+	// Version is the version of the program.
+	Version string
 
 	// commands is a map of commands that the program can execute.
 	commands map[string]*Command
 
 	// buffer is a buffer that the program can use to store data.
-	buffer *sfb.Buffer[string]
+	buffer *sfb.Buffer[any]
 
 	// history is the history of the program.
 	// It is the messages that have been printed to the program.
 	history *llq.SafeQueue[string]
 
-	// Version is the version of the program.
-	Version string
-
 	// Options are the optional options of the program.
 	Options *Configurations
+
+	// ctx is the context of the program.
+	ctx context.Context
 }
 
-// Println prints a line to the program's buffer.
+// GenerateProgram creates a new program with the given command, version, options,
+// and subcommands.
 //
 // Parameters:
-//   - args: The items to print.
-func (p *Program) Println(args ...interface{}) {
-	str := fmt.Sprintln(args...)
-
-	p.buffer.Send(str)
-}
-
-// Printf prints a formatted line to the program's buffer.
+//   - cmd: The main/privileged command of the program.
+//   - version: The version of the program.
+//   - opts: The options of the program.
+//   - subCmds: The subcommands of the program.
 //
-// Parameters:
-//   - format: The format of the line.
-//   - args: The items to print.
+// Returns:
+//   - *Program: The new program.
 //
 // Behaviors:
-//   - A newline character will be appended to the end of the string
-//     if it does not already have one.
-func (p *Program) Printf(format string, args ...interface{}) {
-	str := fmt.Sprintf(format, args...)
+//   - If cmd is nil, it will be set to a new command.
+//   - nil subcommands will be filtered out.
+//   - If a subcommand has the same name as another subcommand, the first one
+//     will be kept.
+func (p *Program) fix() {
+	p.Name = strings.TrimSpace(p.Name)
+	p.Brief = strings.TrimSpace(p.Brief)
 
-	p.buffer.Send(str)
+	if p.Options == nil {
+		p.Options = DefaultOptions
+	} else {
+		p.Options.fix()
+	}
+
+	if p.commands == nil {
+		p.commands = make(map[string]*Command)
+	}
+
+	p.commands[HelpCmdOpcode] = HelpCmd
+}
+
+// SetCommands sets the commands of the program.
+//
+// Parameters:
+//   - cmds: The commands to set.
+//
+// Behaviors:
+//   - nil commands will be filtered out.
+//   - If a command has the same name as another command, the first one
+//     will be kept.
+//   - The Help command will overwrite any other command with the same name.
+func (p *Program) SetCommands(cmds ...*Command) {
+	cmds = us.SliceFilter(cmds, FilterInvalidCmd)
+	if len(cmds) == 0 {
+		return
+	}
+
+	if p.commands == nil {
+		p.commands = make(map[string]*Command)
+	}
+
+	for _, cmd := range cmds {
+		cmd.fix()
+
+		_, ok := p.commands[cmd.Name]
+		if !ok {
+			p.commands[cmd.Name] = cmd
+		}
+	}
 }
 
 // GetTabSize gets the size of a tab character.
@@ -154,7 +182,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	}
 
 	// Usage: <name> (command) [arguments]
-	err = trav.AddLine(p.Usage)
+	err = trav.AddJoinedLine(" ", "Usage:", p.Name, "(command)", "[arguments]")
 	if err != nil {
 		return err
 	}
@@ -221,53 +249,6 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// ClearHistory clears the history of the program.
-//
-// This function is thread-safe.
-func (p *Program) ClearHistory() {
-	p.history.Clear()
-}
-
-// SavePartial saves the current history to a file in the partials directory.
-//
-// This can be used for logging/debugging purposes and/or to save the state of
-// the program or evaluate the program's output.
-//
-// This function is thread-safe.
-//
-// Parameters:
-//   - filename: The name of the file to save the partial to.
-//
-// Returns:
-//   - error: An error if the partial could not be saved.
-func (p *Program) SavePartial(filename string) error {
-	iter := p.history.Iterator()
-
-	fullpath := path.Join("partials", filename)
-
-	fw := ufm.NewFileWriter(fullpath)
-
-	err := fw.Open()
-	if err != nil {
-		return err
-	}
-	defer fw.Close()
-
-	for {
-		line, err := iter.Consume()
-		if err != nil {
-			break
-		}
-
-		err = fw.AppendLine(line)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

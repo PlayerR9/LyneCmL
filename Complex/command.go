@@ -1,10 +1,10 @@
-package pkg
+package Complex
 
 import (
 	"fmt"
 	"strings"
 
-	util "github.com/PlayerR9/LyneCmL/pkg/util"
+	util "github.com/PlayerR9/LyneCmL/Complex/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
@@ -70,6 +70,8 @@ func (c *Command) fix() {
 	if c.Argument == nil {
 		c.Argument = NoArgument
 	}
+
+	c.Argument.fix()
 
 	if c.Run == nil {
 		c.Run = NoRunFunc
@@ -197,6 +199,16 @@ func parseArgs(p *Program, args []string, cmd *Command) (*Parsed, error) {
 	return parsed, err
 }
 
+// handleCmd handles the command by validating the arguments and running the command.
+//
+// Parameters:
+//   - p: The program that the command is being executed on.
+//   - args: The arguments that were passed to the command.
+//   - cmd: The command to run.
+//
+// Returns:
+//   - *Parsed: The parsed arguments and data.
+//   - error: An error if the command failed to execute.
 func handleCmd(p *Program, args []string, cmd *Command) (*Parsed, error) {
 	validatedArgs, err := cmd.Argument.validate(args)
 	if err != nil {

@@ -1,15 +1,22 @@
-package pkg
+package Complex
 
 import (
-	util "github.com/PlayerR9/LyneCmL/pkg/util"
+	util "github.com/PlayerR9/LyneCmL/Complex/util"
 )
 
 var (
+	// NoParseFunc is a function that does nothing.
+	NoParseFunc ArgumentParseFunc
+
 	// NoArgument is an argument that takes no arguments.
 	NoArgument *Argument
 )
 
 func init() {
+	NoParseFunc = func(p *Program, args []string) (any, int, error) {
+		return nil, len(args), nil
+	}
+
 	NoArgument = &Argument{
 		bounds:    [2]int{0, 0},
 		parseFunc: NoParseFunc,
@@ -28,17 +35,6 @@ func init() {
 //   - error: An error if the argument failed to execute.
 type ArgumentParseFunc func(p *Program, args []string) (any, int, error)
 
-var (
-	// NoParseFunc is a function that does nothing.
-	NoParseFunc ArgumentParseFunc
-)
-
-func init() {
-	NoParseFunc = func(p *Program, args []string) (any, int, error) {
-		return nil, len(args), nil
-	}
-}
-
 // Argument is an argument that a command can take.
 type Argument struct {
 	// bounds is the bounds of the argument.
@@ -46,6 +42,41 @@ type Argument struct {
 
 	// parseFunc is the function that will be executed when the argument is parsed.
 	parseFunc ArgumentParseFunc
+}
+
+func (a *Argument) fix() {
+	if a.parseFunc != nil {
+		return
+	}
+
+	min, max := a.bounds[0], a.bounds[1]
+
+	if min == 0 {
+		if max == 0 {
+			// NoArgument
+			a.parseFunc = NoParseFunc
+		} else {
+			// AtMostNArgs
+			a.parseFunc = func(p *Program, args []string) (any, int, error) {
+				return nil, max, nil
+			}
+		}
+	} else if max == -1 {
+		// AtLeastNArgs
+		a.parseFunc = func(p *Program, args []string) (any, int, error) {
+			return nil, len(args), nil
+		}
+	} else if min == max {
+		// ExactlyNArgs
+		a.parseFunc = func(p *Program, args []string) (any, int, error) {
+			return nil, min, nil
+		}
+	} else {
+		// RangeArgs
+		a.parseFunc = func(p *Program, args []string) (any, int, error) {
+			return nil, max, nil
+		}
+	}
 }
 
 // AtLeastNArgs creates an argument that requires at least n arguments.
