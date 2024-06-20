@@ -1,7 +1,5 @@
-github.com/PlayerR9/MyGoLib v0.3.27 h1:tOG2b5AB5a7aHHkd3aTTcPMx7zKmPt7sBrCxWgIgcmU=
-github.com/PlayerR9/MyGoLib v0.3.27/go.mod h1:lj4Yoy3mHUZokdDADU1VIs5cidN9TZqoaoBqSkbmO0o=
-github.com/PlayerR9/MyGoLib v0.3.30 h1:G+ITEFAO3DBD4iU7lw/N5fiepH8nOAFnaRD4VsHIr1w=
-github.com/PlayerR9/MyGoLib v0.3.30/go.mod h1:lj4Yoy3mHUZokdDADU1VIs5cidN9TZqoaoBqSkbmO0o=
+github.com/PlayerR9/MyGoLib v0.3.31 h1:dz5BXmyPWPMFRhqIt+aQqGkexCKrK21TcvlkPIdcMOU=
+github.com/PlayerR9/MyGoLib v0.3.31/go.mod h1:lj4Yoy3mHUZokdDADU1VIs5cidN9TZqoaoBqSkbmO0o=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/encoding v1.0.1 h1:YzKZckdBL6jVt2Gc+5p82qhrGiqMdG/eNs6Wy0u3Uhw=
 github.com/gdamore/encoding v1.0.1/go.mod h1:0Z0cMFinngz9kS1QfMjCP8TY7em3bZYeeklsSDPivEo=
@@ -27,8 +25,6 @@ golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLL
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
 golang.org/x/net v0.6.0/go.mod h1:2Tu9+aMcznHK/AK1HMvgo6xiTLG5rD5rZLDS+rp2Bjs=
-golang.org/x/net v0.26.0 h1:soB7SVo0PWrY4vPW/+ay0jKDNScG2X9wFeYlXIvJsOQ=
-golang.org/x/net v0.26.0/go.mod h1:5YKkiSynbBIh3p6iOc/vibscux0x38BZDkn8sCUPxHE=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.1.0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
