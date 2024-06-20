@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// Msger is a message.
 type Msger interface{}
 
 // TextMsg is a message that contains text.
@@ -24,6 +25,27 @@ type TextMsg struct {
 //   - *TextMsg: The new TextMsg.
 func NewTextMsg(text string) *TextMsg {
 	return &TextMsg{
+		text: text,
+	}
+}
+
+// LogMsg is a message that logs a message.
+type LogMsg struct {
+	// text is the text of the message.
+	text string
+}
+
+// NewLogMsg creates a new LogMsg.
+//
+// It must not end with a newline character.
+//
+// Parameters:
+//   - text: The text of the message.
+//
+// Returns:
+//   - *LogMsg: The new LogMsg.
+func NewLogMsg(text string) *LogMsg {
+	return &LogMsg{
 		text: text,
 	}
 }

@@ -15,8 +15,10 @@ var (
 
 func init() {
 	HelpCmd = &Command{
-		Name:  HelpCmdOpcode,
-		Usage: "help [command]",
+		Name: HelpCmdOpcode,
+		Usages: []string{
+			"help [command]",
+		},
 		Brief: "Displays help information about the program or a specific command",
 		Description: NewDescription(
 			"If no command is specified, the help command will display help information about the program.",

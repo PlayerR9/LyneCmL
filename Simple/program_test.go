@@ -9,10 +9,21 @@ import (
 
 // TestMakeProgram tests the MakeProgram function.
 func TestMakeProgram(t *testing.T) {
+	TestFlag := &Flag[string]{
+		Name:        "test",
+		Brief:       "A test flag.",
+		Usage:       "",
+		Description: NewDescription("This is a test flag."),
+		DefaultVal:  "",
+		ParseFunc: func(arg string) (string, error) {
+			return arg, nil
+		},
+	}
+
 	NowCmd := &Command{
-		Name:  "now",
-		Usage: "now",
-		Brief: "Prints the current date and time.",
+		Name:   "now",
+		Usages: nil,
+		Brief:  "Prints the current date and time.",
 		Argument: ExactlyNArgs(1).SetParseFunc(func(p *Program, args []string) (any, int, error) {
 			num, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -43,12 +54,20 @@ func TestMakeProgram(t *testing.T) {
 
 	NewYearCmd := &Command{
 		Name:     "new-year",
-		Usage:    "new-year",
+		Usages:   nil,
 		Brief:    "Prints the date and time of the next new year.",
 		Argument: NoArgument,
 		Run: func(p *Program, args []string, data any) (any, error) {
 			now := time.Now()
 			year := now.Year()
+
+			x := TestFlag.GetValue()
+			if x != "" {
+				err := p.Println("Test flag value:", x)
+				if err != nil {
+					return nil, err
+				}
+			}
 
 			newYear := time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.Local)
 
@@ -62,6 +81,10 @@ func TestMakeProgram(t *testing.T) {
 			return nil, nil
 		},
 	}
+
+	NewYearCmd.SetFlags(
+		TestFlag,
+	)
 
 	Program := &Program{
 		Name:        "Test",

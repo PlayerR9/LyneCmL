@@ -1,6 +1,9 @@
 package Simple
 
 import (
+	"strconv"
+	"strings"
+
 	util "github.com/PlayerR9/LyneCmL/Simple/util"
 )
 
@@ -44,7 +47,82 @@ type Argument struct {
 	parseFunc ArgumentParseFunc
 }
 
-func (a *Argument) fix() {
+// GenerateUsage implements the CmlComponent interface.
+func (a *Argument) GenerateUsage() []string {
+	min, max := a.bounds[0], a.bounds[1]
+	if min == 0 && max == 0 {
+		// NoArgument
+		return nil
+	}
+
+	var lines []string
+
+	if min == 0 {
+		// AtMostNArgs
+		if max == 1 {
+			lines = append(lines, "[arg]")
+		} else {
+			lines = append(lines, "")
+
+			var builder strings.Builder
+
+			builder.WriteString("(arg1)...(arg")
+			builder.WriteString(strconv.Itoa(max))
+			builder.WriteRune(')')
+
+			lines = append(lines, builder.String())
+		}
+	} else if max == -1 {
+		// AtLeastNArgs
+
+		if min == 1 {
+			lines = append(lines, "(arg) [optional]...")
+		} else {
+			var builder strings.Builder
+
+			builder.WriteString("(arg1)...(arg")
+			builder.WriteString(strconv.Itoa(min))
+			builder.WriteRune(')')
+
+			lines = append(lines, builder.String())
+		}
+	} else if min == max {
+		// ExactlyNArgs
+		if min <= 2 {
+			lines = append(lines, "(arg1) (arg2)")
+		} else {
+			var builder strings.Builder
+
+			builder.WriteString("(arg1)...(arg")
+			builder.WriteString(strconv.Itoa(max))
+			builder.WriteRune(')')
+
+			lines = append(lines, builder.String())
+		}
+	} else {
+		// RangeArgs
+		var builder strings.Builder
+
+		if min == 1 {
+			builder.WriteString("(arg) [optional]...")
+		} else {
+			builder.WriteString("(arg1)...(arg")
+			builder.WriteString(strconv.Itoa(min))
+			builder.WriteString(") [optional]...")
+		}
+
+		builder.WriteString("...[arg")
+		builder.WriteString(strconv.Itoa(max))
+		builder.WriteRune(']')
+
+		lines = append(lines, builder.String())
+	}
+
+	return lines
+}
+
+// Fix implements the CmlComponent interface.
+func (a *Argument) Fix() {
 	if a.parseFunc != nil {
 		return
 	}
@@ -179,6 +257,26 @@ func RangeArgs(min, max int) *Argument {
 	}
 }
 
+// SetParseFunc sets the parse function of the argument.
+//
+// Parameters:
+//   - f: The function to set.
+//
+// Returns:
+//   - *Argument: The argument.
+//
+// Behaviors:
+//   - If f is nil, it will be set to NoParseFunc.
+func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
+	if f == nil {
+		f = NoParseFunc
+	}
+
+	a.parseFunc = f
+
+	return a
+}
+
 // validate is a helper function that validates the number of arguments.
 //
 // Parameters:
@@ -205,24 +303,4 @@ func (a *Argument) validate(args []string) ([]string, error) {
 	}
 
 	return args, nil
-}
-
-// SetParseFunc sets the parse function of the argument.
-//
-// Parameters:
-//   - f: The function to set.
-//
-// Returns:
-//   - *Argument: The argument.
-//
-// Behaviors:
-//   - If f is nil, it will be set to NoParseFunc.
-func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
-	if f == nil {
-		f = NoParseFunc
-	}
-
-	a.parseFunc = f
-
-	return a
 }

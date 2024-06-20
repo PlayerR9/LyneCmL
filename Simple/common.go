@@ -2,10 +2,27 @@ package Simple
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	util "github.com/PlayerR9/LyneCmL/Simple/util"
+	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
+
+// CmlComponent is a component of a CML program.
+type CmlComponent interface {
+	// GenerateUsage generates the usage of the component.
+	//
+	// Returns:
+	//   - []string: The usage of the component.
+	GenerateUsage() []string
+
+	// Fix fixes the component.
+	Fix()
+
+	ffs.FStringer
+}
 
 const (
 	// HelpCommandName is the name of the help command.
@@ -21,7 +38,7 @@ const (
 // Returns:
 //   - error: An error if the program failed to run.
 func ExecuteProgram(p *Program, args []string) error {
-	p.fix()
+	p.Fix()
 
 	if p.Name == "" {
 		p.Name = args[0]
@@ -32,7 +49,9 @@ func ExecuteProgram(p *Program, args []string) error {
 		Spacing: p.Options.Spacing,
 	}
 
-	display := pd.NewDisplay(displayConfigs)
+	glTableAligner = util.NewTableAligner(p.Options.TabSize)
+
+	display := pd.NewDisplay(displayConfigs, log.New(os.Stdout, "["+p.Name+"]: ", log.LstdFlags))
 
 	p.display = display
 
@@ -77,3 +96,7 @@ func DefaultExitSequence(err error) {
 	fmt.Println("Press ENTER to exit...")
 	fmt.Scanln()
 }
+
+var (
+	glTableAligner *util.TableAligner
+)

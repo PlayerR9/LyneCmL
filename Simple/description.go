@@ -12,14 +12,7 @@ type Description struct {
 	lines []string
 }
 
-// FString formats the description using the given traversor.
-//
-// Parameters:
-//   - trav: The traversor to use to format the description.
-//   - opts: The options to use to format the description.
-//
-// Returns:
-//   - error: An error if the description failed to format.
+// FString implements the ffs.FStringer interface.
 func (d *Description) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	if trav == nil {
 		return nil

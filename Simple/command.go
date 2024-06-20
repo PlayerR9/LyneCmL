@@ -1,12 +1,9 @@
 package Simple
 
 import (
-	"fmt"
 	"strings"
 
-	util "github.com/PlayerR9/LyneCmL/Simple/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
 
@@ -38,8 +35,8 @@ type Command struct {
 	// Name is the name of the command.
 	Name string
 
-	// Usage is the usage of the command.
-	Usage string
+	// Usages are the usages of the command.
+	Usages []string
 
 	// Brief is a brief description of the command.
 	Brief string
@@ -60,22 +57,137 @@ type Command struct {
 	// Then the return value of the run function will be passed to the
 	// sub-command as the data argument.
 	subCommands map[string]*Command
+
+	// flags is a map of flags that the command can execute.
+	flags map[string]any
 }
 
-// fix fixes the command by trimming all the strings and setting default values.
-func (c *Command) fix() {
-	c.Name = strings.TrimSpace(c.Name)
-	c.Usage = strings.TrimSpace(c.Usage)
-	c.Brief = strings.TrimSpace(c.Brief)
+// GenerateUsage implements the CmlComponent interface.
+func (c *Command) GenerateUsage() []string {
+	var lines []string
 
+	// Deal with arguments
+
+	argumentLines := c.Argument.GenerateUsage()
+
+	var builder strings.Builder
+
+	for _, line := range argumentLines {
+		if line == "" {
+			lines = append(lines, c.Name)
+		} else {
+			builder.WriteString(c.Name)
+			builder.WriteRune(' ')
+			builder.WriteString(line)
+
+			lines = append(lines, builder.String())
+			builder.Reset()
+		}
+	}
+
+	/*
+		// name args [flags]
+
+		// Name is the name of the command.
+		Name string
+
+
+		// Argument is the argument of the command.
+		Argument *Argument
+
+
+		// subCommands is a map of sub-commands that the command can execute.
+		// If at least one sub-command is present, then the first argument
+		// of the command will be the sub-command.
+		//
+		// Then the return value of the run function will be passed to the
+		// sub-command as the data argument.
+		subCommands map[string]*Command
+
+		// flags is a map of flags that the command can execute.
+		flags map[string]Flager[any]
+	*/
+
+	return lines
+}
+
+// Fix implements the CmlComponent interface.
+func (c *Command) Fix() {
+	// Fix argument
 	if c.Argument == nil {
 		c.Argument = NoArgument
 	}
 
-	c.Argument.fix()
+	c.Argument.Fix()
+
+	// Fix command
+	c.Name = strings.TrimSpace(c.Name)
+
+	if c.Usages != nil {
+		for i := 0; i < len(c.Usages); i++ {
+			c.Usages[i] = strings.TrimSpace(c.Usages[i])
+		}
+
+		c.Usages = us.RemoveEmpty(c.Usages)
+	}
+
+	if len(c.Usages) == 0 {
+		newUsage := c.GenerateUsage()
+		c.Usages = newUsage
+	}
+
+	c.Brief = strings.TrimSpace(c.Brief)
 
 	if c.Run == nil {
 		c.Run = NoRunFunc
+	}
+}
+
+// SetFlags sets the flags of the command.
+//
+// Parameters:
+//   - flags: The flags to set.
+//
+// Behaviors:
+//   - If a flag has the same name as another flag, the first one will be kept.
+//   - nil or empty flags will be filtered out.
+//   - Flags are fixed before being set.
+func (c *Command) SetFlags(flags ...any) {
+	if c.flags == nil {
+		c.flags = make(map[string]any)
+	}
+
+	for _, flag := range flags {
+		if flag == nil {
+			continue
+		}
+
+		switch flag := flag.(type) {
+		case *Flag[any]:
+			flag.Fix()
+
+			flagName := flag.GetName()
+			if flagName == "" {
+				continue
+			}
+
+			_, ok := c.flags[flagName]
+			if !ok {
+				c.flags[flagName] = flag
+			}
+		case *BoolFlag:
+			flag.Fix()
+
+			flagName := flag.GetName()
+			if flagName == "" {
+				continue
+			}
+
+			_, ok := c.flags[flagName]
+			if !ok {
+				c.flags[flagName] = flag
+			}
+		}
 	}
 }
 
@@ -94,9 +206,63 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	trav.EmptyLine()
 
 	// Usage: <usage>
-	err = trav.AddJoinedLine(" ", "Usage:", c.Usage)
-	if err != nil {
-		return err
+	if len(c.Usages) == 1 {
+		err = trav.AddJoinedLine(" ", "Usage:", c.Usages[0])
+		if err != nil {
+			return err
+		}
+	} else {
+		err = trav.AddLine("Usage:")
+		if err != nil {
+			return err
+		}
+
+		for _, usage := range c.Usages {
+			err := ffs.ApplyFormFunc(
+				trav.GetConfig(
+					ffs.WithModifiedIndent(1),
+				),
+				trav,
+				usage,
+				func(trav *ffs.Traversor, elem string) error {
+					err := trav.AddLine(elem)
+					if err != nil {
+						return err
+					}
+
+					return nil
+				},
+			)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Flags:
+	// 	<flags>
+	if c.flags != nil {
+		glTableAligner.SetHead("Flags:")
+
+		for name, flag := range c.flags {
+			var usage string
+
+			switch flag := flag.(type) {
+			case *BoolFlag:
+				usage = flag.Usage
+			case *Flag[any]:
+				usage = flag.Usage
+			}
+
+			glTableAligner.AddRow([]string{name, usage})
+		}
+
+		err = glTableAligner.FString(trav)
+		if err != nil {
+			return err
+		}
+
+		glTableAligner.Reset()
 	}
 
 	if c.Description == nil {
@@ -135,6 +301,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 //   - If a sub-command has the same name as another sub-command, the first one
 //     will be kept.
 //   - nil sub-commands will be filtered out.
+//   - Sub-commands are fixed before being added.
 func (c *Command) AddSubCommand(cmds ...*Command) {
 	cmds = us.FilterNilValues(cmds)
 
@@ -147,7 +314,7 @@ func (c *Command) AddSubCommand(cmds ...*Command) {
 	}
 
 	for _, cmd := range cmds {
-		cmd.fix()
+		cmd.Fix()
 		if cmd.Name == "" {
 			continue
 		}
@@ -168,91 +335,34 @@ type Parsed struct {
 	data any
 }
 
-// parseArgs parses the arguments and runs the command.
+// GetFlag gets the value of a flag.
 //
 // Parameters:
-//   - p: The program that the command is being executed on.
-//   - args: The arguments that were passed to the command.
-//   - cmd: The command to run.
+//   - name: The name of the flag.
 //
 // Returns:
-//   - *Parsed: The parsed arguments and data.
-//   - error: An error if the command failed to execute.
-func parseArgs(p *Program, args []string, cmd *Command) (*Parsed, error) {
-	if len(cmd.subCommands) == 0 || len(args) == 0 {
-		parsed, err := handleCmd(p, args, cmd)
-		return parsed, err
+//   - any: The value of the flag.
+//   - bool: true if the flag was found, false otherwise.
+func (c *Command) GetFlag(name string) (any, bool) {
+	if c.flags == nil {
+		return nil, false
 	}
 
-	// Recursive case
-	subCmd, ok := cmd.subCommands[args[0]]
+	flag, ok := c.flags[name]
 	if !ok {
-		return nil, util.NewErrUnknownCommand(args[0])
+		return nil, false
 	}
 
-	parsed, err := parseArgs(p, args[1:], subCmd)
-	if err != nil {
-		return nil, fmt.Errorf("in sub-command %q: %w", subCmd.Name, err)
+	switch flag := flag.(type) {
+	case *Flag[any]:
+		value := flag.GetValue()
+
+		return value, true
+	case *BoolFlag:
+		value := flag.GetValue()
+
+		return value, true
 	}
 
-	// Handle the command
-	parsed, err = handleCmd(p, parsed.args, subCmd)
-	return parsed, err
-}
-
-// handleCmd handles the command by validating the arguments and running the command.
-//
-// Parameters:
-//   - p: The program that the command is being executed on.
-//   - args: The arguments that were passed to the command.
-//   - cmd: The command to run.
-//
-// Returns:
-//   - *Parsed: The parsed arguments and data.
-//   - error: An error if the command failed to execute.
-func handleCmd(p *Program, args []string, cmd *Command) (*Parsed, error) {
-	validatedArgs, err := cmd.Argument.validate(args)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		r := recover()
-		if r == nil {
-			return
-		}
-
-		err = ue.NewErrPanic(r)
-
-		err := p.Panic(err)
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	data, n, err := cmd.Argument.parseFunc(p, validatedArgs)
-	if err != nil {
-		return nil, err
-	}
-
-	ok := p.display.IsDone()
-	if ok {
-		return nil, nil
-	}
-
-	if n < 0 {
-		n = 0
-	} else if n > len(args) {
-		n = len(args)
-	}
-
-	res, err := cmd.Run(p, validatedArgs[:n], data)
-	if err != nil {
-		return nil, fmt.Errorf("error running command: %w", err)
-	}
-
-	return &Parsed{
-		args: args[n:],
-		data: res,
-	}, nil
+	panic("unreachable")
 }

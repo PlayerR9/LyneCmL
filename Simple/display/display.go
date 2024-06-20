@@ -3,6 +3,7 @@ package display
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 
@@ -32,6 +33,9 @@ type Display struct {
 
 	// configs is the configurations of the display.
 	configs *Configs
+
+	// logger is the logger of the display.
+	logger *log.Logger
 }
 
 // NewDisplay creates a new display with the given configurations.
@@ -41,7 +45,7 @@ type Display struct {
 //
 // Returns:
 //   - *Display: The new display.
-func NewDisplay(config *Configs) *Display {
+func NewDisplay(config *Configs, logger *log.Logger) *Display {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	buffer := sfb.NewBuffer[Msger]()
@@ -53,6 +57,7 @@ func NewDisplay(config *Configs) *Display {
 		configs: config,
 		buffer:  buffer,
 		history: history,
+		logger:  logger,
 	}
 }
 
@@ -114,6 +119,14 @@ func (d *Display) msgHandler(msg any) error {
 		d.history.Enqueue(str)
 
 		fmt.Println(str)
+	case *LogMsg:
+		space := strings.Repeat(" ", d.configs.Spacing)
+
+		str, _ := fs.FixTabStop(0, d.configs.TabSize, space, msg.text)
+
+		d.history.Enqueue(str)
+
+		d.logger.Println(str)
 	case *ClearHistoryMsg:
 		d.history.Clear()
 	case *StoreHistoryMsg:
