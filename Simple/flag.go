@@ -128,7 +128,7 @@ type BoolFlag struct {
 }
 
 // GetValue implements Flager interface.
-func (bf *BoolFlag) GetValue() any {
+func (bf *BoolFlag) GetValue() bool {
 	return bf.value
 }
 
@@ -138,8 +138,8 @@ func (bf *BoolFlag) GetName() string {
 }
 
 // SetValue implements Flager interface.
-func (bf *BoolFlag) SetValue(value any) {
-	bf.value = value.(bool)
+func (bf *BoolFlag) SetValue(value bool) {
+	bf.value = value
 }
 
 // GenerateUsage implements CmlComponent interface.
