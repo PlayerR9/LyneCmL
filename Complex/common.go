@@ -5,6 +5,7 @@ import (
 
 	pd "github.com/PlayerR9/LyneCmL/Complex/display"
 	util "github.com/PlayerR9/LyneCmL/Complex/util"
+	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
 
 const (
@@ -21,6 +22,29 @@ const (
 // Returns:
 //   - error: An error if the program failed to run.
 func ExecuteProgram(p *Program, args []string) error {
+	switch len(args) {
+	case 0:
+		return ue.NewErrInvalidParameter(
+			"args",
+			ue.NewErrEmpty(args),
+		)
+	case 1:
+		return ue.NewErrInvalidParameter(
+			"args",
+			ue.NewErrInvalidUsage(
+				fmt.Errorf("missing command"),
+				"Use \"help\" to see a list of available commands.",
+			),
+		)
+	}
+
+	if len(args) == 0 {
+		return ue.NewErrInvalidParameter(
+			"args",
+			ue.NewErrEmpty(args),
+		)
+	}
+
 	p.fix()
 
 	if p.Name == "" {
