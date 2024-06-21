@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
@@ -36,7 +37,7 @@ type Program struct {
 	Brief string
 
 	// Description is a description of the command.
-	Description *Description
+	Description *DescBuilder
 
 	// Version is the version of the program.
 	Version string
@@ -45,7 +46,7 @@ type Program struct {
 	commands map[string]*Command
 
 	// Options are the optional options of the program.
-	Options *Configs
+	Options *cnf.Config
 
 	// display is the display of the program.
 	display *pd.Display
@@ -57,9 +58,9 @@ func (p *Program) Fix() {
 	p.Brief = strings.TrimSpace(p.Brief)
 
 	if p.Options == nil {
-		p.Options = DefaultOptions
+		p.Options = cnf.NewConfig("config", 0644)
 	} else {
-		p.Options.fix()
+		p.Options.Fix()
 	}
 
 	if p.commands == nil {
@@ -194,12 +195,34 @@ func (p *Program) SetCommands(cmds ...*Command) {
 	}
 }
 
+// GetDisplayConfigs gets the display configurations of the program.
+//
+// Returns:
+//   - *cnf.DisplayConfigs: The display configurations. Nil if not found
+//     or if the configuration is not of type *cnf.DisplayConfigs.
+func (p *Program) GetDisplayConfigs() *cnf.DisplayConfigs {
+	config := p.Options.GetConfigs(cnf.DisplayConfig)
+
+	if config == nil {
+		return nil
+	}
+
+	dc, ok := config.(*cnf.DisplayConfigs)
+	if !ok {
+		return nil
+	}
+
+	return dc
+}
+
 // GetTabSize gets the size of a tab character.
 //
 // Returns:
 //   - int: The size of a tab character.
 func (p *Program) GetTabSize() int {
-	return p.Options.TabSize
+	config := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
+
+	return config.TabSize
 }
 
 // GetTab gets a string of tabs.
@@ -207,7 +230,9 @@ func (p *Program) GetTabSize() int {
 // Returns:
 //   - string: The tab string.
 func (p *Program) GetTab() string {
-	return strings.Repeat(" ", p.Options.TabSize)
+	config := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
+
+	return strings.Repeat(" ", config.TabSize)
 }
 
 // GetSpacing gets the spacing between columns.
@@ -215,7 +240,9 @@ func (p *Program) GetTab() string {
 // Returns:
 //   - int: The spacing between columns.
 func (p *Program) GetSpacing() int {
-	return p.Options.Spacing
+	config := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
+
+	return config.Spacing
 }
 
 // Println prints a line to the program's buffer.

@@ -42,7 +42,7 @@ type Command struct {
 	Brief string
 
 	// Description is a description of the command.
-	Description *Description
+	Description *DescBuilder
 
 	// Argument is the argument of the command.
 	Argument *Argument

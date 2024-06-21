@@ -13,26 +13,23 @@ import (
 //   - arg: The argument to parse.
 //
 // Returns:
-//   - T: The parsed argument.
+//   - any: The parsed argument.
 //   - error: An error if the argument failed to parse.
 type FlagParseFunc[T any] func(arg string) (T, error)
 
 // Flager is a flag.
 type Flager[T any] interface {
-	// Fix fixes the flag.
-	Fix()
-
 	// GetValue gets the value of the flag.
 	//
 	// Returns:
-	//   - T: The value of the flag.
-	GetValue() T
+	//   - any: The value of the flag.
+	GetValue() any
 
 	// SetValue sets the value of the flag.
 	//
 	// Parameters:
 	//   - value: The value to set.
-	SetValue(T)
+	SetValue(any)
 
 	// GetName gets the name of the flag.
 	//
@@ -43,7 +40,7 @@ type Flager[T any] interface {
 	CmlComponent
 }
 
-// Flag is a flag of type T.
+// Flag is a flag of type any.
 type Flag[T any] struct {
 	// Name is the name of the flag.
 	Name string
@@ -55,7 +52,7 @@ type Flag[T any] struct {
 	Usage string
 
 	// Description is a description of the flag.
-	Description *Description
+	Description *DescBuilder
 
 	// DefaultVal is the default value of the flag.
 	DefaultVal T
@@ -121,7 +118,7 @@ type BoolFlag struct {
 	Usage string
 
 	// Description is a description of the flag.
-	Description *Description
+	Description *DescBuilder
 
 	// value is the value of the flag.
 	value bool

@@ -6,14 +6,14 @@ import (
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
 
-// Description is a description of a command or flag.
-type Description struct {
+// DescBuilder is a builder for a description.
+type DescBuilder struct {
 	// lines is the list of lines in the description.
 	lines []string
 }
 
 // FString implements the ffs.FStringer interface.
-func (d *Description) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
+func (d *DescBuilder) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	if trav == nil {
 		return nil
 	}
@@ -33,8 +33,8 @@ func (d *Description) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 //
 // Returns:
 //   - *Description: The new description.
-func NewDescription(lines ...string) *Description {
-	return &Description{
+func NewDescription(lines ...string) *DescBuilder {
+	return &DescBuilder{
 		lines: lines,
 	}
 }
@@ -46,8 +46,30 @@ func NewDescription(lines ...string) *Description {
 //
 // Returns:
 //   - *Description: The description.
-func (d *Description) AddLine(sections ...string) *Description {
+func (d *DescBuilder) AddLine(sections ...string) *DescBuilder {
 	d.lines = append(d.lines, strings.Join(sections, " "))
 
 	return d
+}
+
+// Build builds the description.
+//
+// Returns:
+//   - []string: The description.
+func (d *DescBuilder) Build() []string {
+	linesCopy := make([]string, len(d.lines))
+	copy(linesCopy, d.lines)
+
+	d.Reset()
+
+	return linesCopy
+}
+
+// Reset resets the description.
+func (d *DescBuilder) Reset() {
+	for i := range d.lines {
+		d.lines[i] = ""
+	}
+
+	d.lines = d.lines[:0]
 }

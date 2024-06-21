@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	com "github.com/PlayerR9/LyneCmL/Simple/common"
+	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	util "github.com/PlayerR9/LyneCmL/Simple/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
@@ -18,10 +20,9 @@ type CmlComponent interface {
 	//   - []string: The usage of the component.
 	GenerateUsage() []string
 
-	// Fix fixes the component.
-	Fix()
-
 	ffs.FStringer
+
+	com.Fixer
 }
 
 const (
@@ -44,14 +45,13 @@ func ExecuteProgram(p *Program, args []string) error {
 		p.Name = args[0]
 	}
 
-	displayConfigs := &pd.Configs{
-		TabSize: p.Options.TabSize,
-		Spacing: p.Options.Spacing,
-	}
+	p.Options = cnf.NewConfig("configs", 0644)
 
-	glTableAligner = util.NewTableAligner(p.Options.TabSize)
+	dc := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
 
-	display := pd.NewDisplay(displayConfigs, log.New(os.Stdout, "["+p.Name+"]: ", log.LstdFlags))
+	glTableAligner = util.NewTableAligner(dc.TabSize)
+
+	display := pd.NewDisplay(dc, log.New(os.Stdout, "["+p.Name+"]: ", log.LstdFlags))
 
 	p.display = display
 
