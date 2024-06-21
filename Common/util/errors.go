@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+///////////////////////////////////////////////////////
+
 // ErrFewArguments is an error that is returned when too few arguments are passed.
 type ErrFewArguments struct {
 	// Expected is the number of arguments that were expected.

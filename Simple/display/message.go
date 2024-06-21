@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+///////////////////////////////////////////////////////
+
 // Msger is a message.
 type Msger interface{}
 

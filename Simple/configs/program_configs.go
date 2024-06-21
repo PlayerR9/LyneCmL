@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 )
 
+///////////////////////////////////////////////////////
+
 type ProgConfig struct{}
 
 // Fix implements Configer interface.

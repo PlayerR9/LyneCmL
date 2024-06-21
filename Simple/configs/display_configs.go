@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+///////////////////////////////////////////////////////
+
 // Config are the configurations for a program.
 type DisplayConfigs struct {
 	// TabSize is the size of a tab character.

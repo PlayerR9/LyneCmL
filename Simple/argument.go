@@ -1,10 +1,9 @@
 package Simple
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
-
-	util "github.com/PlayerR9/LyneCmL/Simple/util"
 )
 
 var (
@@ -16,8 +15,8 @@ var (
 )
 
 func init() {
-	NoParseFunc = func(p *Program, args []string) (any, int, error) {
-		return nil, len(args), nil
+	NoParseFunc = func(args []string) (any, error) {
+		return args, nil
 	}
 
 	NoArgument = &Argument{
@@ -29,14 +28,14 @@ func init() {
 // ArgumentParseFunc is a function that will be executed when the argument is parsed.
 //
 // Parameters:
-//   - p: The program that the argument is being executed on.
 //   - args: The arguments that were passed to the argument.
 //
 // Returns:
 //   - any: The result of the arguments.
-//   - int: The number of arguments that were parsed.
 //   - error: An error if the argument failed to execute.
-type ArgumentParseFunc func(p *Program, args []string) (any, int, error)
+type ArgumentParseFunc func(args []string) (any, error)
+
+///////////////////////////////////////////////////////
 
 // Argument is an argument that a command can take.
 type Argument struct {
@@ -123,37 +122,8 @@ func (a *Argument) GenerateUsage() []string {
 
 // Fix implements the CmlComponent interface.
 func (a *Argument) Fix() {
-	if a.parseFunc != nil {
-		return
-	}
-
-	min, max := a.bounds[0], a.bounds[1]
-
-	if min == 0 {
-		if max == 0 {
-			// NoArgument
-			a.parseFunc = NoParseFunc
-		} else {
-			// AtMostNArgs
-			a.parseFunc = func(p *Program, args []string) (any, int, error) {
-				return nil, max, nil
-			}
-		}
-	} else if max == -1 {
-		// AtLeastNArgs
-		a.parseFunc = func(p *Program, args []string) (any, int, error) {
-			return nil, len(args), nil
-		}
-	} else if min == max {
-		// ExactlyNArgs
-		a.parseFunc = func(p *Program, args []string) (any, int, error) {
-			return nil, min, nil
-		}
-	} else {
-		// RangeArgs
-		a.parseFunc = func(p *Program, args []string) (any, int, error) {
-			return nil, max, nil
-		}
+	if a.parseFunc == nil {
+		a.parseFunc = NoParseFunc
 	}
 }
 
@@ -277,30 +247,35 @@ func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
 	return a
 }
 
-// validate is a helper function that validates the number of arguments.
-//
-// Parameters:
-//   - args: The arguments to validate.
+// GetMin gets the minimum number of arguments.
 //
 // Returns:
-//   - []string: The arguments if they are valid.
-//   - error: An error if the arguments are invalid.
-func (a *Argument) validate(args []string) ([]string, error) {
-	left := a.bounds[0]
+//   - int: The minimum number of arguments.
+func (a *Argument) GetMin() int {
+	return a.bounds[0]
+}
 
-	var right int
+// GetMax gets the maximum number of arguments.
+//
+// Returns:
+//   - int: The maximum number of arguments. -1 if there is no maximum.
+func (a *Argument) GetMax() int {
+	return a.bounds[1]
+}
 
-	if a.bounds[1] == -1 {
-		right = len(args)
-	} else {
-		right = a.bounds[1]
+// Apply applies the argument to the arguments.
+//
+// Parameters:
+//   - args: The arguments to apply the argument to.
+//
+// Returns:
+//   - any: The result of the arguments.
+//   - error: An error if the argument failed to execute.
+func (a *Argument) Apply(args []string) (any, error) {
+	res, err := a.parseFunc(args)
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply argument: %w", err)
 	}
 
-	if len(args) < left {
-		return nil, util.NewErrFewArguments(left, len(args))
-	} else if len(args) > right {
-		return nil, util.NewErrManyArguments(right, len(args))
-	}
-
-	return args, nil
+	return res, nil
 }

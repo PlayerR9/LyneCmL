@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
@@ -20,12 +21,13 @@ func init() {
 			"help [command]",
 		},
 		Brief: "Displays help information about the program or a specific command",
-		Description: NewDescription(
-			"If no command is specified, the help command will display help information about the program.",
-			"Otherwise, the help command will display help information about the specified command.",
-		),
+		Description: com.NewDescription().AddLine(
+			"If no command is specified, the help command will display help",
+			"information about the program. Otherwise, the help command will",
+			"display help information about the specified command.",
+		).Build(),
 		Argument: AtMostNArgs(1),
-		Run: func(p *Program, args []string, data any) (any, error) {
+		Run: func(p *Program, args []string, data any) error {
 			printer := ffs.NewStdPrinter(
 				ffs.NewFormatter(
 					ffs.NewIndentConfig(p.GetTab(), 0),
@@ -36,7 +38,7 @@ func init() {
 			if len(args) == 0 {
 				err := ffs.Apply(printer, p)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			} else {
 				// Display help of a specific command.
@@ -44,7 +46,7 @@ func init() {
 
 				command, ok := p.commands[name]
 				if !ok {
-					return nil, ue.NewErrInvalidUsage(
+					return ue.NewErrInvalidUsage(
 						fmt.Errorf("command %q is not a valid command", name),
 						"Use command \"help\" to see the list of available commands",
 					)
@@ -52,7 +54,7 @@ func init() {
 
 				err := ffs.Apply(printer, command)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 
@@ -60,10 +62,10 @@ func init() {
 
 			err := p.Println(strings.Join(pages, "\f"))
 			if err != nil {
-				return nil, err
+				return err
 			}
 
-			return nil, nil
+			return nil
 		},
 	}
 }

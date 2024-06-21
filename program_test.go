@@ -1,38 +1,41 @@
-package Simple
+package LyneCmL
 
 import (
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	cms "github.com/PlayerR9/LyneCmL/Simple"
+	com "github.com/PlayerR9/LyneCmL/Simple/common"
 )
 
 // TestMakeProgram tests the MakeProgram function.
 func TestMakeProgram(t *testing.T) {
-	TestFlag := &Flag[string]{
-		Name:        "test",
+	TestFlag := &cms.Flag[string]{
+		LongName:    "test",
 		Brief:       "A test flag.",
 		Usage:       "",
-		Description: NewDescription("This is a test flag."),
+		Description: com.NewDescription("This is a test flag.").Build(),
 		DefaultVal:  "",
 		ParseFunc: func(arg string) (string, error) {
 			return arg, nil
 		},
 	}
 
-	NowCmd := &Command{
+	NowCmd := &cms.Command{
 		Name:   "now",
 		Usages: nil,
 		Brief:  "Prints the current date and time.",
-		Argument: ExactlyNArgs(1).SetParseFunc(func(p *Program, args []string) (any, int, error) {
+		Argument: cms.ExactlyNArgs(1).SetParseFunc(func(args []string) (any, error) {
 			num, err := strconv.Atoi(args[0])
 			if err != nil {
-				return nil, 0, err
+				return nil, err
 			}
 
-			return num, 1, nil
+			return num, nil
 		}),
-		Run: func(p *Program, args []string, data any) (any, error) {
+		Run: func(p *cms.Program, args []string, data any) error {
 			str := strings.Repeat(" ", data.(int))
 
 			err := p.Printf("The current date and time is:\n%s- %s\n",
@@ -40,32 +43,32 @@ func TestMakeProgram(t *testing.T) {
 				time.Now().Format(time.RFC1123),
 			)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			err = p.SavePartial("now.txt")
 			if err != nil {
-				return nil, err
+				return err
 			}
 
-			return nil, nil
+			return nil
 		},
 	}
 
-	NewYearCmd := &Command{
+	NewYearCmd := &cms.Command{
 		Name:     "new-year",
 		Usages:   nil,
 		Brief:    "Prints the date and time of the next new year.",
-		Argument: NoArgument,
-		Run: func(p *Program, args []string, data any) (any, error) {
+		Argument: cms.NoArgument,
+		Run: func(p *cms.Program, args []string, data any) error {
 			now := time.Now()
 			year := now.Year()
 
-			x := TestFlag.GetValue()
+			x := TestFlag.Value
 			if x != "" {
 				err := p.Println("Test flag value:", x)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 
@@ -75,10 +78,10 @@ func TestMakeProgram(t *testing.T) {
 				newYear.Format(time.RFC1123),
 			)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
-			return nil, nil
+			return nil
 		},
 	}
 
@@ -86,10 +89,10 @@ func TestMakeProgram(t *testing.T) {
 		TestFlag,
 	)
 
-	Program := &Program{
+	Program := &cms.Program{
 		Name:        "Test",
 		Brief:       "A test program.",
-		Description: NewDescription("This is a test program."),
+		Description: com.NewDescription("This is a test program.").Build(),
 		Version:     "v0.1.4",
 	}
 

@@ -7,6 +7,8 @@ import (
 	com "github.com/PlayerR9/LyneCmL/Simple/common"
 )
 
+///////////////////////////////////////////////////////
+
 const (
 	// DisplayConfig is the display configuration.
 	DisplayConfig string = "display"

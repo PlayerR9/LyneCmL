@@ -13,3 +13,7 @@ The current date and time is:
 The current date and time is:
        - Thu, 20 Jun 2024 18:26:23 CEST
 
+Running command now...
+The current date and time is:
+       - Fri, 21 Jun 2024 16:28:11 CEST
+

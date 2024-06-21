@@ -14,6 +14,8 @@ import (
 	ufm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
 )
 
+///////////////////////////////////////////////////////
+
 // Display is a display that can be used to display messages.
 type Display struct {
 	// buffer is the message buffer.

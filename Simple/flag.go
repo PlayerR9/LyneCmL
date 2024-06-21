@@ -4,8 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
+
+// Flager is an interface for a flag.
+type Flager interface {
+	com.Fixer
+}
 
 // FlagParseFunc is a function that parses a flag argument.
 //
@@ -17,33 +23,13 @@ import (
 //   - error: An error if the argument failed to parse.
 type FlagParseFunc[T any] func(arg string) (T, error)
 
-// Flager is a flag.
-type Flager[T any] interface {
-	// GetValue gets the value of the flag.
-	//
-	// Returns:
-	//   - any: The value of the flag.
-	GetValue() any
-
-	// SetValue sets the value of the flag.
-	//
-	// Parameters:
-	//   - value: The value to set.
-	SetValue(any)
-
-	// GetName gets the name of the flag.
-	//
-	// Returns:
-	//   - string: The name of the flag.
-	GetName() string
-
-	CmlComponent
-}
-
 // Flag is a flag of type any.
 type Flag[T any] struct {
-	// Name is the name of the flag.
-	Name string
+	// LongName is the long name of the flag.
+	LongName string
+
+	// ShortName is the short name of the flag.
+	ShortName rune
 
 	// Brief is a brief description of the flag.
 	Brief string
@@ -52,7 +38,7 @@ type Flag[T any] struct {
 	Usage string
 
 	// Description is a description of the flag.
-	Description *DescBuilder
+	Description []string
 
 	// DefaultVal is the default value of the flag.
 	DefaultVal T
@@ -60,23 +46,27 @@ type Flag[T any] struct {
 	// ParseFunc is the function that parses the flag argument.
 	ParseFunc FlagParseFunc[T]
 
-	// value is the value of the flag.
-	value T
+	// HasArgument is true if the flag requires an argument. False otherwise.
+	HasArgument bool
+
+	// Value is the value of the flag. Do not set this field.
+	Value T
 }
 
-// GetValue implements Flager interface.
-func (f *Flag[T]) GetValue() T {
-	return f.value
+///////////////////////////////////////////////////////
+
+// Fix implements Flager interface.
+func (f *Flag[T]) Fix() {
+	f.LongName = strings.TrimSpace(f.LongName)
+	f.LongName = "--" + f.LongName
+
+	f.Brief = strings.TrimSpace(f.Brief)
+	f.Usage = strings.TrimSpace(f.Usage)
 }
 
-// GetName implements Flager interface.
-func (f *Flag[T]) GetName() string {
-	return f.Name
-}
-
-// SetValue implements Flager interface.
-func (f *Flag[T]) SetValue(value T) {
-	f.value = value
+// FString implements the FString.FStringer interface.
+func (f *Flag[T]) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
+	panic("not implemented")
 }
 
 // GenerateUsage implements CmlComponent interface.
@@ -85,74 +75,8 @@ func (f *Flag[T]) SetValue(value T) {
 func (f *Flag[T]) GenerateUsage() []string {
 	var builder strings.Builder
 
-	builder.WriteString(f.Name)
+	builder.WriteString(f.LongName)
 	fmt.Fprintf(&builder, "=<%T>", f.DefaultVal)
 
 	return []string{builder.String()}
-}
-
-// Fix implements Flager interface.
-func (f *Flag[T]) Fix() {
-	f.Name = strings.TrimSpace(f.Name)
-	f.Name = "--" + f.Name
-
-	f.Brief = strings.TrimSpace(f.Brief)
-	f.Usage = strings.TrimSpace(f.Usage)
-}
-
-// FString implements the Flager interface.
-func (f *Flag[T]) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
-	panic("not implemented")
-}
-
-// BoolFlag is a special flag that has no value and
-// so, it is either present or not.
-type BoolFlag struct {
-	// Name is the name of the flag.
-	Name string
-
-	// Brief is a brief description of the flag.
-	Brief string
-
-	// Usage is the usage of the flag.
-	Usage string
-
-	// Description is a description of the flag.
-	Description *DescBuilder
-
-	// value is the value of the flag.
-	value bool
-}
-
-// GetValue implements Flager interface.
-func (bf *BoolFlag) GetValue() bool {
-	return bf.value
-}
-
-// GetName implements Flager interface.
-func (bf *BoolFlag) GetName() string {
-	return bf.Name
-}
-
-// SetValue implements Flager interface.
-func (bf *BoolFlag) SetValue(value bool) {
-	bf.value = value
-}
-
-// GenerateUsage implements CmlComponent interface.
-func (bf *BoolFlag) GenerateUsage() []string {
-	return []string{bf.Name}
-}
-
-// Fix implements Flager interface.
-func (bf *BoolFlag) Fix() {
-	bf.Name = strings.TrimSpace(bf.Name)
-	bf.Name = "--" + bf.Name
-	bf.Brief = strings.TrimSpace(bf.Brief)
-	bf.Usage = strings.TrimSpace(bf.Usage)
-}
-
-// FString implements the Flager interface.
-func (f *BoolFlag) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
-	panic("not implemented")
 }

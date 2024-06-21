@@ -3,9 +3,12 @@ package Simple
 import (
 	"strings"
 
+	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
+
+///////////////////////////////////////////////////////
 
 // RunFunc is a function that will be executed when the command is called.
 //
@@ -15,9 +18,8 @@ import (
 //   - data: The data that was passed to the command. (if any)
 //
 // Returns:
-//   - any: The result of the command.
 //   - error: An error if the command failed to execute.
-type RunFunc func(p *Program, args []string, data any) (any, error)
+type RunFunc func(p *Program, args []string, data any) error
 
 var (
 	// NoRunFunc is a function that does nothing.
@@ -25,8 +27,8 @@ var (
 )
 
 func init() {
-	NoRunFunc = func(p *Program, args []string, data any) (any, error) {
-		return data, nil
+	NoRunFunc = func(p *Program, args []string, data any) error {
+		return nil
 	}
 }
 
@@ -42,7 +44,7 @@ type Command struct {
 	Brief string
 
 	// Description is a description of the command.
-	Description *DescBuilder
+	Description []string
 
 	// Argument is the argument of the command.
 	Argument *Argument
@@ -166,19 +168,7 @@ func (c *Command) SetFlags(flags ...any) {
 		case *Flag[any]:
 			flag.Fix()
 
-			flagName := flag.GetName()
-			if flagName == "" {
-				continue
-			}
-
-			_, ok := c.flags[flagName]
-			if !ok {
-				c.flags[flagName] = flag
-			}
-		case *BoolFlag:
-			flag.Fix()
-
-			flagName := flag.GetName()
+			flagName := flag.LongName
 			if flagName == "" {
 				continue
 			}
@@ -245,16 +235,9 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 		glTableAligner.SetHead("Flags:")
 
 		for name, flag := range c.flags {
-			var usage string
+			fg := flag.(*Flag[any])
 
-			switch flag := flag.(type) {
-			case *BoolFlag:
-				usage = flag.Usage
-			case *Flag[any]:
-				usage = flag.Usage
-			}
-
-			glTableAligner.AddRow([]string{name, usage})
+			glTableAligner.AddRow([]string{name, fg.Usage})
 		}
 
 		err = glTableAligner.FString(trav)
@@ -278,12 +261,14 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 		return err
 	}
 
+	printer := com.NewPrinter(c.Description)
+
 	err = ffs.ApplyForm(
 		trav.GetConfig(
 			ffs.WithModifiedIndent(1),
 		),
 		trav,
-		c.Description,
+		printer,
 	)
 	if err != nil {
 		return err
@@ -326,13 +311,12 @@ func (c *Command) AddSubCommand(cmds ...*Command) {
 	}
 }
 
-// Parsed is a parsed command.
-type Parsed struct {
-	// args are the arguments that were parsed.
-	args []string
-
-	// data is the data that was parsed. (if any)
-	data any
+// GetFlagMap gets the flags of the command.
+//
+// Returns:
+//   - map[string]any: The flags of the command.
+func (c *Command) GetFlagMap() map[string]any {
+	return c.flags
 }
 
 // GetFlag gets the value of a flag.
@@ -353,16 +337,27 @@ func (c *Command) GetFlag(name string) (any, bool) {
 		return nil, false
 	}
 
-	switch flag := flag.(type) {
-	case *Flag[any]:
-		value := flag.GetValue()
+	fg := flag.(*Flag[any])
 
-		return value, true
-	case *BoolFlag:
-		value := flag.GetValue()
+	return fg.Value, true
+}
 
-		return value, true
+// GetSubCommand gets a sub-command of the command.
+//
+// Parameters:
+//   - name: The name of the sub-command.
+//
+// Returns:
+//   - *Command: The sub-command. Nil if not found.
+func (c *Command) GetSubCommand(name string) *Command {
+	if len(c.subCommands) == 0 {
+		return nil
 	}
 
-	panic("unreachable")
+	cmd, ok := c.subCommands[name]
+	if !ok {
+		return nil
+	}
+
+	return cmd
 }

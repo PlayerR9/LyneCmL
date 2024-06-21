@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
@@ -37,20 +38,55 @@ type Program struct {
 	Brief string
 
 	// Description is a description of the command.
-	Description *DescBuilder
+	Description []string
 
 	// Version is the version of the program.
 	Version string
 
-	// commands is a map of commands that the program can execute.
-	commands map[string]*Command
-
 	// Options are the optional options of the program.
 	Options *cnf.Config
 
+	// commands is a map of commands that the program can execute.
+	commands map[string]*Command
+
 	// display is the display of the program.
 	display *pd.Display
+
+	// flags is a map of flags that the program can use.
+	flags map[string]any
 }
+
+// GetCmdMap gets the map of commands of the program.
+//
+// Returns:
+//   - map[string]*Command: The map of commands.
+func (p *Program) GetCmdMap() map[string]*Command {
+	return p.commands
+}
+
+// SetDisplay sets the display of the program.
+//
+// No operation if display is nil.
+//
+// Parameters:
+//   - display: The display to set.
+func (p *Program) SetDisplay(display *pd.Display) {
+	if display == nil {
+		return
+	}
+
+	p.display = display
+}
+
+func (p *Program) addFlag(name string, flag any) {
+	if p.flags == nil {
+		p.flags = make(map[string]any)
+	}
+
+	p.flags[name] = flag
+}
+
+///////////////////////////////////////////////////////
 
 // Fix implements the CmlComponent interface.
 func (p *Program) Fix() {
@@ -58,7 +94,7 @@ func (p *Program) Fix() {
 	p.Brief = strings.TrimSpace(p.Brief)
 
 	if p.Options == nil {
-		p.Options = cnf.NewConfig("config", 0644)
+		p.Options = cnf.NewConfig(ConfigLoc, 0644)
 	} else {
 		p.Options.Fix()
 	}
@@ -130,12 +166,14 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 			return err
 		}
 
+		printer := com.NewPrinter(p.Description)
+
 		err = ffs.ApplyForm(
 			trav.GetConfig(
 				ffs.WithModifiedIndent(1),
 			),
 			trav,
-			p.Description,
+			printer,
 		)
 		if err != nil {
 			return err
