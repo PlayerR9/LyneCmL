@@ -35,7 +35,7 @@ func TestMakeProgram(t *testing.T) {
 
 			return num, nil
 		}),
-		Run: func(p *cms.Program, args []string, data any) error {
+		Run: func(p *cms.Program, data any) error {
 			str := strings.Repeat(" ", data.(int))
 
 			err := p.Printf("The current date and time is:\n%s- %s\n",
@@ -60,7 +60,7 @@ func TestMakeProgram(t *testing.T) {
 		Usages:   nil,
 		Brief:    "Prints the date and time of the next new year.",
 		Argument: cms.NoArgument,
-		Run: func(p *cms.Program, args []string, data any) error {
+		Run: func(p *cms.Program, data any) error {
 			now := time.Now()
 			year := now.Year()
 

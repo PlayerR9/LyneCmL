@@ -9,7 +9,11 @@ import (
 type ProgConfig struct{}
 
 // Fix implements Configer interface.
-func (po *ProgConfig) Fix() {}
+//
+// This never returns an error.
+func (po *ProgConfig) Fix() error {
+	return nil
+}
 
 // Default implements Configer interface.
 func (po *ProgConfig) Default() Configer {

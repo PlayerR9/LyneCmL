@@ -89,7 +89,9 @@ func (p *Program) addFlag(name string, flag any) {
 ///////////////////////////////////////////////////////
 
 // Fix implements the CmlComponent interface.
-func (p *Program) Fix() {
+//
+// This never errors.
+func (p *Program) Fix() error {
 	p.Name = strings.TrimSpace(p.Name)
 	p.Brief = strings.TrimSpace(p.Brief)
 
@@ -104,6 +106,8 @@ func (p *Program) Fix() {
 	}
 
 	p.commands[HelpCmdOpcode] = HelpCmd
+
+	return nil
 }
 
 // GenerateUsage implements the CmlComponent interface.

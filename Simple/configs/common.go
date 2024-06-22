@@ -44,7 +44,9 @@ type Config struct {
 }
 
 // Fix implements Configer interface.
-func (c *Config) Fix() {
+//
+// This never errors.
+func (c *Config) Fix() error {
 	conf, ok := c.configTable[DisplayConfig]
 	if !ok {
 		def := (*new(DisplayConfigs)).Default()
@@ -68,6 +70,8 @@ func (c *Config) Fix() {
 			config.Fix()
 		}
 	}
+
+	return nil
 }
 
 // MarshalJSON implements Configer interface.

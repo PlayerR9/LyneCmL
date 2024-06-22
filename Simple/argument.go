@@ -121,10 +121,14 @@ func (a *Argument) GenerateUsage() []string {
 }
 
 // Fix implements the CmlComponent interface.
-func (a *Argument) Fix() {
+//
+// This never errors.
+func (a *Argument) Fix() error {
 	if a.parseFunc == nil {
 		a.parseFunc = NoParseFunc
 	}
+
+	return nil
 }
 
 // AtLeastNArgs creates an argument that requires at least n arguments.

@@ -56,12 +56,16 @@ type Flag[T any] struct {
 ///////////////////////////////////////////////////////
 
 // Fix implements Flager interface.
-func (f *Flag[T]) Fix() {
+//
+// This never errors.
+func (f *Flag[T]) Fix() error {
 	f.LongName = strings.TrimSpace(f.LongName)
 	f.LongName = "--" + f.LongName
 
 	f.Brief = strings.TrimSpace(f.Brief)
 	f.Usage = strings.TrimSpace(f.Usage)
+
+	return nil
 }
 
 // FString implements the FString.FStringer interface.

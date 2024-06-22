@@ -14,12 +14,12 @@ import (
 //
 // Parameters:
 //   - p: The program that the command is being executed on.
-//   - args: The arguments that were passed to the command.
-//   - data: The data that was passed to the command. (if any)
+//   - data: The data that was passed to the command. (either the arguments
+//     or the parsed arguments)
 //
 // Returns:
 //   - error: An error if the command failed to execute.
-type RunFunc func(p *Program, args []string, data any) error
+type RunFunc func(p *Program, data any) error
 
 var (
 	// NoRunFunc is a function that does nothing.
@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	NoRunFunc = func(p *Program, args []string, data any) error {
+	NoRunFunc = func(p *Program, data any) error {
 		return nil
 	}
 }
@@ -114,7 +114,9 @@ func (c *Command) GenerateUsage() []string {
 }
 
 // Fix implements the CmlComponent interface.
-func (c *Command) Fix() {
+//
+// This never errors.
+func (c *Command) Fix() error {
 	// Fix argument
 	if c.Argument == nil {
 		c.Argument = NoArgument
@@ -143,6 +145,8 @@ func (c *Command) Fix() {
 	if c.Run == nil {
 		c.Run = NoRunFunc
 	}
+
+	return nil
 }
 
 // SetFlags sets the flags of the command.

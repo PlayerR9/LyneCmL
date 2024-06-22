@@ -36,13 +36,12 @@ type PhaseRunFunc func(p *Program, prevRes any, data any) (any, error)
 //
 // Parameters:
 //   - p: The program to run.
-//   - args: The arguments to pass to the program.
 //   - data: The data to pass to the phases.
 //
 // Returns:
 //   - any: The result of the setup.
 //   - error: The error that occurred while setting up the program.
-type PhaseSetupFunc func(p *Program, args []string, data any) (any, error)
+type PhaseSetupFunc func(p *Program, data any) (any, error)
 
 // Phase is a phase of the program.
 type Phase struct {
@@ -74,16 +73,20 @@ type Phase struct {
 
 // Fix implements the common.Fixer interface.
 //
+// This never errors.
+//
 // Behaviors:
 //   - The Name and Short fields are trimmed of whitespace on both ends.
 //   - If the RunFunc is nil, then it is set to the DefaultPhaseRunFunc.
-func (p *Phase) Fix() {
+func (p *Phase) Fix() error {
 	p.Name = strings.TrimSpace(p.Name)
 	p.Short = strings.TrimSpace(p.Short)
 
 	if p.RunFunc == nil {
 		p.RunFunc = DefaultPhaseRunFunc
 	}
+
+	return nil
 }
 
 // PhaseString creates a string for the phase.
@@ -154,12 +157,12 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 
 	if len(phases) == 0 {
 		if setupFunc == nil {
-			return func(p *Program, args []string, data any) error {
+			return func(p *Program, data any) error {
 				return nil
 			}
 		} else {
-			return func(p *Program, args []string, data any) error {
-				_, err := setupFunc(p, args, data)
+			return func(p *Program, data any) error {
+				_, err := setupFunc(p, data)
 				if err != nil {
 					return ue.NewErrWhile("setup", err)
 				}
@@ -172,8 +175,8 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 	totalPhases := len(phases)
 
 	if setupFunc == nil {
-		return func(p *Program, args []string, data any) error {
-			var res any = args
+		return func(p *Program, data any) error {
+			var res any = data
 
 			for i, phase := range phases {
 				str := PhaseString(i+1, totalPhases, phase.Short)
@@ -192,8 +195,8 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 			return nil
 		}
 	} else {
-		return func(p *Program, args []string, data any) error {
-			res, err := setupFunc(p, args, data)
+		return func(p *Program, data any) error {
+			res, err := setupFunc(p, data)
 			if err != nil {
 				return ue.NewErrWhile("setup", err)
 			}
@@ -278,7 +281,7 @@ func (ep *ExecProcess) Execute(p *Program) error {
 		return fmt.Errorf("error printing: %w", err)
 	}
 
-	err = ep.cmd.Run(p, ep.args, ep.data)
+	err = ep.cmd.Run(p, ep.data)
 	if err != nil {
 		return fmt.Errorf("error running command: %w", err)
 	}

@@ -17,7 +17,9 @@ type DisplayConfigs struct {
 }
 
 // Fix implements Configer interface.
-func (dc *DisplayConfigs) Fix() {
+//
+// This never returns an error.
+func (dc *DisplayConfigs) Fix() error {
 	if dc.TabSize <= 0 {
 		dc.TabSize = 3
 	}
@@ -25,6 +27,8 @@ func (dc *DisplayConfigs) Fix() {
 	if dc.Spacing <= 0 {
 		dc.Spacing = 1
 	}
+
+	return nil
 }
 
 // Default implements Configer interface.
