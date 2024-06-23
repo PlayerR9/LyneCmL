@@ -7,11 +7,32 @@ import (
 
 	prs "github.com/PlayerR9/LyneCmL/Common/Parser"
 	cms "github.com/PlayerR9/LyneCmL/Simple"
-	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
+
+// Fix is a function that fixes the program. This should be
+// always called before running the program as it will fix
+// any errors in the program.
+//
+// Parameters:
+//   - p: The program to fix.
+//
+// Returns:
+//   - error: An error if the program failed to fix.
+func Fix(p *cms.Program) error {
+	if p == nil {
+		return ue.NewErrNilParameter("program")
+	}
+
+	err := p.Fix()
+	if err != nil {
+		return fmt.Errorf("invalid program: %w", err)
+	}
+
+	return nil
+}
 
 // ExecuteProgram runs the program.
 //
@@ -21,8 +42,46 @@ import (
 //
 // Returns:
 //   - error: An error if the program failed to run.
+//
+// Behaviors:
+//   - If no program is given, it will do nothing and return nil.
+//
+// Example:
+//
+//	var Program *Simple.Program
+//
+//	func init() {
+//		Program = &Simple.Program{
+//			Name:  "Program",
+//			Brief: "A program that can be run.",
+//			Description: []string{
+//				"Program is a program that can be run.",
+//				"It can run commands and display information.",
+//			},
+//			Version: "0.0.1",
+//			Options: nil,
+//		}
+//
+//		Program.AddCommand(
+//			// your commands here
+//		)
+//
+//		Program.AddConfig(
+//			// your configs here
+//		)
+//
+//		err := Fix(Program)
+//		if err != nil {
+//			panic(err)
+//		}
+//	}
+//
+//	func main() {
+//		err := ExecuteProgram(Program, os.Args)
+//		DefaultExitSequence(err) // or any other exit sequence
+//	}
 func ExecuteProgram(p *cms.Program, args []string) error {
-	p.Fix()
+	defer p.SaveConfigs() // Save the configs after running the program.
 
 	if p.Name == "" {
 		p.Name = args[0]
@@ -37,11 +96,7 @@ func ExecuteProgram(p *cms.Program, args []string) error {
 		return fmt.Errorf("in parsing arguments: %w", err)
 	}
 
-	p.Options = cnf.NewConfig("configs", 0644)
-
-	dc := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
-
-	cms.SetTableAligner(com.NewTableAligner(dc.TabSize))
+	dc := p.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
 
 	display := pd.NewDisplay(dc, log.New(os.Stdout, "["+p.Name+"]: ", log.LstdFlags))
 

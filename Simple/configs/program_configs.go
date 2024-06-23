@@ -1,12 +1,10 @@
 package configs
 
-import (
-	"encoding/json"
-)
-
-///////////////////////////////////////////////////////
-
-type ProgConfig struct{}
+// ProgConfig are the configurations for a program.
+type ProgConfig struct {
+	// ProgName is the name of the program.
+	ProgName string `json:"prog_name"`
+}
 
 // Fix implements Configer interface.
 //
@@ -16,33 +14,6 @@ func (po *ProgConfig) Fix() error {
 }
 
 // Default implements Configer interface.
-func (po *ProgConfig) Default() Configer {
-	config := &ProgConfig{}
-	return config
-}
-
-// MarshalJSON implements Configer interface.
-func (po *ProgConfig) MarshalJSON() ([]byte, error) {
-	type Alias struct{}
-
-	a := &Alias{}
-
-	data, err := json.MarshalIndent(a, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-// UnmarshalJSON implements Configer interface.
-func (po *ProgConfig) UnmarshalJSON(data []byte) error {
-	type Alias struct{}
-
-	err := json.Unmarshal(data, &Alias{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (po *ProgConfig) Default() {
+	po.ProgName = ""
 }

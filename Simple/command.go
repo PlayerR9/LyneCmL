@@ -3,8 +3,8 @@ package Simple
 import (
 	"strings"
 
-	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
 
@@ -30,6 +30,58 @@ func init() {
 	NoRunFunc = func(p *Program, data any) error {
 		return nil
 	}
+}
+
+// DotMerging merges two slices of strings by using dot product.
+//
+// Parameters:
+//   - lines: The first slice of strings.
+//   - others: The second slice of strings.
+//   - sep: The separator to use when merging the strings.
+//
+// Returns:
+//   - []string: The merged strings.
+//
+// Example:
+//   - lines: ["a", "b"]
+//   - others: ["1", "2"]
+//   - sep: "-"
+//   - returns: ["a-1", "a-2", "b-1", "b-2"]
+//
+// Behaviors:
+//   - If either lines or others is empty, the other slice will be returned.
+func DotMerging(lines []string, others []string, sep string) []string {
+	if len(others) == 0 {
+		return lines
+	} else if len(lines) == 0 {
+		return others
+	}
+
+	var results []string
+
+	var builder strings.Builder
+
+	for _, line := range others {
+		if line == "" {
+			results = append(results, lines...)
+			continue
+		}
+
+		for _, l := range lines {
+			if l == "" {
+				results = append(results, line)
+			} else {
+				builder.WriteString(l)
+				builder.WriteString(sep)
+				builder.WriteString(line)
+
+				results = append(results, builder.String())
+				builder.Reset()
+			}
+		}
+	}
+
+	return results
 }
 
 // Command is a command that a program can execute.
@@ -61,92 +113,42 @@ type Command struct {
 	subCommands map[string]*Command
 
 	// flags is a map of flags that the command can execute.
-	flags map[string]any
+	flags map[string]*Flag
 }
 
 // GenerateUsage implements the CmlComponent interface.
 func (c *Command) GenerateUsage() []string {
-	var lines []string
+	lines := []string{c.Name}
+
+	// Deal with sub-commands
+	for _, cmd := range c.subCommands {
+		usages := cmd.GenerateUsage()
+
+		lines = DotMerging(lines, usages, " ")
+	}
 
 	// Deal with arguments
-
 	argumentLines := c.Argument.GenerateUsage()
+	lines = DotMerging(lines, argumentLines, " ")
 
+	// Deal with flags
+	var flagLines []string
 	var builder strings.Builder
 
-	for _, line := range argumentLines {
-		if line == "" {
-			lines = append(lines, c.Name)
-		} else {
-			builder.WriteString(c.Name)
-			builder.WriteRune(' ')
-			builder.WriteString(line)
+	for _, flag := range c.flags {
+		str := strings.Join(flag.Usages, " | ")
 
-			lines = append(lines, builder.String())
-			builder.Reset()
-		}
+		builder.WriteRune('[')
+		builder.WriteString(str)
+		builder.WriteRune(']')
+
+		flagLines = append(flagLines, builder.String())
+		builder.Reset()
 	}
 
-	/*
-		// name args [flags]
-
-		// Name is the name of the command.
-		Name string
-
-
-		// Argument is the argument of the command.
-		Argument *Argument
-
-
-		// subCommands is a map of sub-commands that the command can execute.
-		// If at least one sub-command is present, then the first argument
-		// of the command will be the sub-command.
-		//
-		// Then the return value of the run function will be passed to the
-		// sub-command as the data argument.
-		subCommands map[string]*Command
-
-		// flags is a map of flags that the command can execute.
-		flags map[string]Flager[any]
-	*/
+	lines = DotMerging(lines, flagLines, " ")
 
 	return lines
-}
-
-// Fix implements the CmlComponent interface.
-//
-// This never errors.
-func (c *Command) Fix() error {
-	// Fix argument
-	if c.Argument == nil {
-		c.Argument = NoArgument
-	}
-
-	c.Argument.Fix()
-
-	// Fix command
-	c.Name = strings.TrimSpace(c.Name)
-
-	if c.Usages != nil {
-		for i := 0; i < len(c.Usages); i++ {
-			c.Usages[i] = strings.TrimSpace(c.Usages[i])
-		}
-
-		c.Usages = us.RemoveEmpty(c.Usages)
-	}
-
-	if len(c.Usages) == 0 {
-		newUsage := c.GenerateUsage()
-		c.Usages = newUsage
-	}
-
-	c.Brief = strings.TrimSpace(c.Brief)
-
-	if c.Run == nil {
-		c.Run = NoRunFunc
-	}
-
-	return nil
 }
 
 // SetFlags sets the flags of the command.
@@ -158,38 +160,70 @@ func (c *Command) Fix() error {
 //   - If a flag has the same name as another flag, the first one will be kept.
 //   - nil or empty flags will be filtered out.
 //   - Flags are fixed before being set.
-func (c *Command) SetFlags(flags ...any) {
+func (c *Command) SetFlags(flags ...*Flag) {
+	top := 0
+
+	for i := 0; i < len(flags); i++ {
+		if flags[i] != nil {
+			flags[top] = flags[i]
+			top++
+		}
+	}
+
+	flags = flags[:top]
+	if len(flags) == 0 {
+		return
+	}
+
 	if c.flags == nil {
-		c.flags = make(map[string]any)
+		c.flags = make(map[string]*Flag)
 	}
 
 	for _, flag := range flags {
-		if flag == nil {
+		flagName := flag.LongName
+		if flagName == "" {
 			continue
 		}
 
-		switch flag := flag.(type) {
-		case *Flag[any]:
-			flag.Fix()
-
-			flagName := flag.LongName
-			if flagName == "" {
-				continue
-			}
-
-			_, ok := c.flags[flagName]
-			if !ok {
-				c.flags[flagName] = flag
-			}
+		_, ok := c.flags[flagName]
+		if !ok {
+			c.flags[flagName] = flag
 		}
+	}
+}
+
+type CommandFSSetting struct {
+	Spacing string
+}
+
+func WithSpacing(spacing int) ffs.Option {
+	if spacing <= 0 {
+		spacing = 1
+	}
+
+	space := strings.Repeat(" ", spacing)
+
+	return func(s ffs.Settinger) {
+		setting, ok := s.(*CommandFSSetting)
+		if !ok {
+			return
+		}
+
+		setting.Spacing = space
 	}
 }
 
 // FString implements the ffs.FStringer interface.
 func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
-	if trav == nil {
-		return nil
+	settings := &CommandFSSetting{
+		Spacing: " ",
 	}
+
+	for _, opt := range opts {
+		opt(settings)
+	}
+
+	tabSize := trav.GetConfig().GetTabSize()
 
 	// Command: <name>
 	err := trav.AddJoinedLine(" ", "Command:", c.Name)
@@ -199,6 +233,8 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	trav.EmptyLine()
 
+	ta := fs.NewTableAligner()
+
 	// Usage: <usage>
 	if len(c.Usages) == 1 {
 		err = trav.AddJoinedLine(" ", "Usage:", c.Usages[0])
@@ -206,50 +242,37 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 			return err
 		}
 	} else {
-		err = trav.AddLine("Usage:")
-		if err != nil {
-			return err
-		}
+		ta.SetHead("Usage:")
 
 		for _, usage := range c.Usages {
-			err := ffs.ApplyFormFunc(
-				trav.GetConfig(
-					ffs.WithModifiedIndent(1),
-				),
-				trav,
-				usage,
-				func(trav *ffs.Traversor, elem string) error {
-					err := trav.AddLine(elem)
-					if err != nil {
-						return err
-					}
+			ta.AddRow([]string{usage})
+		}
 
-					return nil
-				},
-			)
-			if err != nil {
-				return err
-			}
+		lines, _ := ta.Build(tabSize, true)
+
+		err = trav.AddLines(lines)
+		if err != nil {
+			return err
 		}
 	}
 
 	// Flags:
 	// 	<flags>
 	if c.flags != nil {
-		glTableAligner.SetHead("Flags:")
+		ta.SetHead("Flags:")
 
-		for name, flag := range c.flags {
-			fg := flag.(*Flag[any])
+		for _, flag := range c.flags {
+			str := strings.Join(flag.Usages, settings.Spacing)
 
-			glTableAligner.AddRow([]string{name, fg.Usage})
+			ta.AddRow([]string{str, flag.Brief})
 		}
 
-		err = glTableAligner.FString(trav)
+		lines, _ := ta.Build(tabSize, true)
+
+		err = trav.AddLines(lines)
 		if err != nil {
 			return err
 		}
-
-		glTableAligner.Reset()
 	}
 
 	if c.Description == nil {
@@ -260,20 +283,14 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	// 	<description>
 	trav.EmptyLine()
 
-	err = trav.AddLine("Description:")
-	if err != nil {
-		return err
+	ta.SetHead("Description:")
+	for _, line := range c.Description {
+		ta.AddRow([]string{line})
 	}
 
-	printer := com.NewPrinter(c.Description)
+	lines, _ := ta.Build(tabSize, true)
 
-	err = ffs.ApplyForm(
-		trav.GetConfig(
-			ffs.WithModifiedIndent(1),
-		),
-		trav,
-		printer,
-	)
+	err = trav.AddLines(lines)
 	if err != nil {
 		return err
 	}
@@ -303,7 +320,6 @@ func (c *Command) AddSubCommand(cmds ...*Command) {
 	}
 
 	for _, cmd := range cmds {
-		cmd.Fix()
 		if cmd.Name == "" {
 			continue
 		}
@@ -318,8 +334,8 @@ func (c *Command) AddSubCommand(cmds ...*Command) {
 // GetFlagMap gets the flags of the command.
 //
 // Returns:
-//   - map[string]any: The flags of the command.
-func (c *Command) GetFlagMap() map[string]any {
+//   - map[string]*Flag: The flags of the command.
+func (c *Command) GetFlagMap() map[string]*Flag {
 	return c.flags
 }
 
@@ -341,9 +357,7 @@ func (c *Command) GetFlag(name string) (any, bool) {
 		return nil, false
 	}
 
-	fg := flag.(*Flag[any])
-
-	return fg.Value, true
+	return flag.value, true
 }
 
 // GetSubCommand gets a sub-command of the command.

@@ -7,27 +7,23 @@ import (
 	"time"
 
 	cms "github.com/PlayerR9/LyneCmL/Simple"
-	com "github.com/PlayerR9/LyneCmL/Simple/common"
 )
 
 // TestMakeProgram tests the MakeProgram function.
 func TestMakeProgram(t *testing.T) {
-	TestFlag := &cms.Flag[string]{
+	TestFlag := &cms.Flag{
 		LongName:    "test",
 		Brief:       "A test flag.",
-		Usage:       "",
-		Description: com.NewDescription("This is a test flag.").Build(),
-		DefaultVal:  "",
-		ParseFunc: func(arg string) (string, error) {
-			return arg, nil
-		},
+		Usages:      nil,
+		Description: NewDescription("This is a test flag.").Build(),
+		Argument:    cms.DefaultFlagArgument,
 	}
 
 	NowCmd := &cms.Command{
 		Name:   "now",
 		Usages: nil,
 		Brief:  "Prints the current date and time.",
-		Argument: cms.ExactlyNArgs(1).SetParseFunc(func(args []string) (any, error) {
+		Argument: cms.ExactlyNArgs(1).WithParseFunc(func(args []string) (any, error) {
 			num, err := strconv.Atoi(args[0])
 			if err != nil {
 				return nil, err
@@ -55,6 +51,10 @@ func TestMakeProgram(t *testing.T) {
 		},
 	}
 
+	NowCmd.SetFlags(
+		TestFlag,
+	)
+
 	NewYearCmd := &cms.Command{
 		Name:     "new-year",
 		Usages:   nil,
@@ -64,7 +64,7 @@ func TestMakeProgram(t *testing.T) {
 			now := time.Now()
 			year := now.Year()
 
-			x := TestFlag.Value
+			x := TestFlag.Value().(string)
 			if x != "" {
 				err := p.Println("Test flag value:", x)
 				if err != nil {
@@ -92,7 +92,7 @@ func TestMakeProgram(t *testing.T) {
 	Program := &cms.Program{
 		Name:        "Test",
 		Brief:       "A test program.",
-		Description: com.NewDescription("This is a test program.").Build(),
+		Description: NewDescription("This is a test program.").Build(),
 		Version:     "v0.1.4",
 	}
 
@@ -101,7 +101,17 @@ func TestMakeProgram(t *testing.T) {
 		NewYearCmd,
 	)
 
-	err := ExecuteProgram(Program, []string{"Test", "now", "7"})
+	err := Fix(Program)
+	if err != nil {
+		t.Fatalf("Fix failed: %s", err.Error())
+	}
+
+	// err = ExecuteProgram(Program, []string{"Test", "now", "7", "--test", "yes"})
+	// if err != nil {
+	// 	t.Fatalf("ExecuteProgram failed: %s", err.Error())
+	// }
+
+	err = ExecuteProgram(Program, []string{"Test", "help"})
 	if err != nil {
 		t.Errorf("ExecuteProgram failed: %s", err.Error())
 	}

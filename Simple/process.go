@@ -241,9 +241,17 @@ type ExecProcess struct {
 //
 // Returns:
 //   - *ExecProcess: The new ExecProcess. Nil if the command is nil.
-func NewExecProcess(args []string, data any, cmd *Command) *ExecProcess {
+func NewExecProcess(args []string, data any, cmd *Command, flagLeft []*Flag) *ExecProcess {
 	if cmd == nil {
 		return nil
+	}
+
+	for _, flag := range flagLeft {
+		if flag.Argument == nil {
+			flag.value = false
+		} else {
+			flag.value = flag.Argument.defaultVal
+		}
 	}
 
 	return &ExecProcess{
@@ -280,6 +288,8 @@ func (ep *ExecProcess) Execute(p *Program) error {
 	if err != nil {
 		return fmt.Errorf("error printing: %w", err)
 	}
+
+	p.flags = ep.cmd.flags
 
 	err = ep.cmd.Run(p, ep.data)
 	if err != nil {

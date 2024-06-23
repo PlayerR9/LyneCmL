@@ -5,6 +5,67 @@ import (
 	"strings"
 )
 
+// ErrFlagConflict is an error for when a flag conflicts with another flag.
+type ErrFlagConflict struct {
+	// Flag is the flag that conflicts with another flag.
+	Flag string
+
+	// Conflicting is the flag that conflicts with the flag.
+	Conflicting string
+
+	// Reason is the reason for the conflict.
+	Reason error
+}
+
+// Error implements the errors.Unwrapper interface.
+//
+// Message:
+//   - "flag --<Flag> conflicts with flag --<Conflicting>: <Reason>"
+//   - "flag --<Flag> conflicts with flag --<Conflicting>" if Reason is nil.
+func (e *ErrFlagConflict) Error() string {
+	var builder strings.Builder
+
+	builder.WriteString("flag --")
+	builder.WriteString(e.Flag)
+	builder.WriteString(" conflicts with flag --")
+	builder.WriteString(e.Conflicting)
+
+	if e.Reason != nil {
+		builder.WriteString(": ")
+		builder.WriteString(e.Reason.Error())
+	}
+
+	return builder.String()
+}
+
+// Unwrap implements the errors.Unwrapper interface.
+func (e *ErrFlagConflict) Unwrap() error {
+	return e.Reason
+}
+
+// ChangeReason implements the errors.Unwrapper interface.
+func (e *ErrFlagConflict) ChangeReason(reason error) {
+	e.Reason = reason
+}
+
+// NewErrFlagConflict creates a new ErrFlagConflict.
+//
+// Parameters:
+//   - flag: The flag that conflicts with another flag.
+//   - conflicting: The flag that conflicts with the flag.
+//   - reason: The reason for the conflict.
+//
+// Returns:
+//   - *ErrFlagConflict: The new ErrFlagConflict.
+func NewErrFlagConflict(flag, conflicting string, reason error) *ErrFlagConflict {
+	e := &ErrFlagConflict{
+		Flag:        flag,
+		Conflicting: conflicting,
+		Reason:      reason,
+	}
+	return e
+}
+
 ///////////////////////////////////////////////////////
 
 // ErrFewArguments is an error that is returned when too few arguments are passed.

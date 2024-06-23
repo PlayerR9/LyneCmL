@@ -1,16 +1,19 @@
 package Simple
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
-	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
+	utfm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
 )
 
 var (
@@ -43,8 +46,8 @@ type Program struct {
 	// Version is the version of the program.
 	Version string
 
-	// Options are the optional options of the program.
-	Options *cnf.Config
+	// configTable is a map of configurations that the program can use.
+	configTable map[string]cnf.Configer
 
 	// commands is a map of commands that the program can execute.
 	commands map[string]*Command
@@ -53,7 +56,7 @@ type Program struct {
 	display *pd.Display
 
 	// flags is a map of flags that the program can use.
-	flags map[string]any
+	flags map[string]*Flag
 }
 
 // GetCmdMap gets the map of commands of the program.
@@ -78,38 +81,6 @@ func (p *Program) SetDisplay(display *pd.Display) {
 	p.display = display
 }
 
-func (p *Program) addFlag(name string, flag any) {
-	if p.flags == nil {
-		p.flags = make(map[string]any)
-	}
-
-	p.flags[name] = flag
-}
-
-///////////////////////////////////////////////////////
-
-// Fix implements the CmlComponent interface.
-//
-// This never errors.
-func (p *Program) Fix() error {
-	p.Name = strings.TrimSpace(p.Name)
-	p.Brief = strings.TrimSpace(p.Brief)
-
-	if p.Options == nil {
-		p.Options = cnf.NewConfig(ConfigLoc, 0644)
-	} else {
-		p.Options.Fix()
-	}
-
-	if p.commands == nil {
-		p.commands = make(map[string]*Command)
-	}
-
-	p.commands[HelpCmdOpcode] = HelpCmd
-
-	return nil
-}
-
 // GenerateUsage implements the CmlComponent interface.
 //
 // Always one line.
@@ -117,15 +88,134 @@ func (p *Program) GenerateUsage() []string {
 	var builder strings.Builder
 
 	builder.WriteString(p.Name)
-	builder.WriteString(" (command) [arguments]")
+	builder.WriteString(" (command) [arguments] [flags]")
 
 	return []string{builder.String()}
 }
 
+// LoadConfigs loads the configuration from the file.
+//
+// Returns:
+//   - error: An error if the configuration failed to load.
+func (p *Program) LoadConfigs() error {
+	ok, err := utfm.FileExists(cnf.ConfigLoc)
+	if err != nil {
+		return err
+	}
+
+	f, err := utfm.Create(cnf.ConfigLoc, utfm.DP_All, utfm.FP_All)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if !ok {
+		// Write the configuration to the file
+		data, err := json.MarshalIndent(p.configTable, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		_, err = f.Write(data)
+		if err != nil {
+			return err
+		}
+	} else {
+		stat, err := f.Stat()
+		if err != nil {
+			return err
+		}
+
+		data := make([]byte, stat.Size())
+
+		_, err = f.Read(data)
+		if err != nil {
+			return err
+		}
+
+		err = json.Unmarshal(data, &p.configTable)
+		if err != nil {
+			return err
+		}
+	}
+
+	for key, config := range p.configTable {
+		err := config.Fix()
+		if err != nil {
+			return fmt.Errorf("invalid configuration for %s: %w", key, err)
+		}
+	}
+
+	return nil
+}
+
+// SaveConfigs saves the configuration to the file.
+//
+// Returns:
+//   - error: An error if the configuration failed to save.
+func (p *Program) SaveConfigs() error {
+	data, err := json.MarshalIndent(p.configTable, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(cnf.ConfigDir, utfm.DP_All)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(cnf.ConfigLoc, data, utfm.FP_All)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetConfigs gets the configuration.
+//
+// Parameters:
+//   - key: The key of the configuration.
+//
+// Returns:
+//   - Configer: The configuration. Nil if it does not exist.
+func (p *Program) GetConfigs(key string) cnf.Configer {
+	config, ok := p.configTable[key]
+	if !ok {
+		return nil
+	}
+
+	return config
+}
+
+// AddConfig adds a configuration to the configuration table.
+//
+// Parameters:
+//   - key: The key of the configuration.
+//   - config: The configuration to add.
+func (p *Program) AddConfig(key string, config cnf.Configer) {
+	if config == nil {
+		return
+	}
+
+	_, ok := p.configTable[key]
+	if ok {
+		return
+	}
+
+	p.configTable[key] = config
+}
+
+///////////////////////////////////////////////////////
+
 // FString implements the CmlComponent interface.
 func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
-	if trav == nil {
-		return nil
+	settings := &CommandFSSetting{
+		Spacing: " ",
+	}
+
+	for _, opt := range opts {
+		opt(settings)
 	}
 
 	var err error
@@ -162,23 +252,21 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	trav.EmptyLine()
 
+	ta := fs.NewTableAligner()
+	tabSize := trav.GetConfig().GetTabSize()
+
 	// Description:
 	// 	<description>
 	if p.Description != nil {
-		err := trav.AddLine("Description:")
-		if err != nil {
-			return err
+		ta.SetHead("Description:")
+
+		for _, desc := range p.Description {
+			ta.AddRow([]string{desc})
 		}
 
-		printer := com.NewPrinter(p.Description)
+		lines, _ := ta.Build(tabSize, true)
 
-		err = ffs.ApplyForm(
-			trav.GetConfig(
-				ffs.WithModifiedIndent(1),
-			),
-			trav,
-			printer,
-		)
+		err = trav.AddLines(lines)
 		if err != nil {
 			return err
 		}
@@ -189,20 +277,43 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	// Commands:
 	// 	<usage> 	 <brief> (vertical alignment)
 	//    ...
-	glTableAligner.SetHead("Commands:")
+	ta.SetHead("Commands:")
 
 	for _, command := range p.commands {
 		for _, usage := range command.Usages {
-			glTableAligner.AddRow([]string{usage, command.Brief})
+			ta.AddRow([]string{usage, command.Brief})
 		}
 	}
 
-	err = glTableAligner.FString(trav)
+	ta.AlignRow(0)
+
+	lines, _ := ta.Build(trav.GetConfig().GetTabSize(), true)
+
+	err = trav.AddLines(lines)
 	if err != nil {
 		return err
 	}
 
-	glTableAligner.Reset()
+	// Flags:
+	// 	<flags>
+	if p.flags != nil {
+		ta.SetHead("Flags:")
+
+		for _, flag := range p.flags {
+			str := strings.Join(flag.Usages, settings.Spacing)
+
+			ta.AddRow([]string{str, flag.Brief})
+		}
+
+		ta.AlignRow(0)
+
+		lines, _ := ta.Build(tabSize, true)
+
+		err = trav.AddLines(lines)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -228,8 +339,6 @@ func (p *Program) SetCommands(cmds ...*Command) {
 	}
 
 	for _, cmd := range cmds {
-		cmd.Fix()
-
 		_, ok := p.commands[cmd.Name]
 		if !ok {
 			p.commands[cmd.Name] = cmd
@@ -240,51 +349,11 @@ func (p *Program) SetCommands(cmds ...*Command) {
 // GetDisplayConfigs gets the display configurations of the program.
 //
 // Returns:
-//   - *cnf.DisplayConfigs: The display configurations. Nil if not found
-//     or if the configuration is not of type *cnf.DisplayConfigs.
+//   - *cnf.DisplayConfigs: The display configurations.
 func (p *Program) GetDisplayConfigs() *cnf.DisplayConfigs {
-	config := p.Options.GetConfigs(cnf.DisplayConfig)
+	config := p.configTable[cnf.DisplayConfig].(*cnf.DisplayConfigs)
 
-	if config == nil {
-		return nil
-	}
-
-	dc, ok := config.(*cnf.DisplayConfigs)
-	if !ok {
-		return nil
-	}
-
-	return dc
-}
-
-// GetTabSize gets the size of a tab character.
-//
-// Returns:
-//   - int: The size of a tab character.
-func (p *Program) GetTabSize() int {
-	config := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
-
-	return config.TabSize
-}
-
-// GetTab gets a string of tabs.
-//
-// Returns:
-//   - string: The tab string.
-func (p *Program) GetTab() string {
-	config := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
-
-	return strings.Repeat(" ", config.TabSize)
-}
-
-// GetSpacing gets the spacing between columns.
-//
-// Returns:
-//   - int: The spacing between columns.
-func (p *Program) GetSpacing() int {
-	config := p.Options.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
-
-	return config.Spacing
+	return config
 }
 
 // Println prints a line to the program's buffer.

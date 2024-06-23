@@ -4,24 +4,26 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/PlayerR9/LyneCmL/Common/util"
 )
 
 var (
-	// NoParseFunc is a function that does nothing.
-	NoParseFunc ArgumentParseFunc
+	// DefaultParseFunc is a function that does nothing.
+	DefaultParseFunc ArgumentParseFunc
 
 	// NoArgument is an argument that takes no arguments.
 	NoArgument *Argument
 )
 
 func init() {
-	NoParseFunc = func(args []string) (any, error) {
+	DefaultParseFunc = func(args []string) (any, error) {
 		return args, nil
 	}
 
 	NoArgument = &Argument{
 		bounds:    [2]int{0, 0},
-		parseFunc: NoParseFunc,
+		parseFunc: DefaultParseFunc,
 	}
 }
 
@@ -120,17 +122,6 @@ func (a *Argument) GenerateUsage() []string {
 	return lines
 }
 
-// Fix implements the CmlComponent interface.
-//
-// This never errors.
-func (a *Argument) Fix() error {
-	if a.parseFunc == nil {
-		a.parseFunc = NoParseFunc
-	}
-
-	return nil
-}
-
 // AtLeastNArgs creates an argument that requires at least n arguments.
 //
 // Parameters:
@@ -148,7 +139,7 @@ func AtLeastNArgs(n int) *Argument {
 
 	return &Argument{
 		bounds:    [2]int{n, -1},
-		parseFunc: NoParseFunc,
+		parseFunc: DefaultParseFunc,
 	}
 }
 
@@ -168,7 +159,7 @@ func AtMostNArgs(n int) *Argument {
 	} else {
 		return &Argument{
 			bounds:    [2]int{0, n},
-			parseFunc: NoParseFunc,
+			parseFunc: DefaultParseFunc,
 		}
 	}
 }
@@ -189,7 +180,7 @@ func ExactlyNArgs(n int) *Argument {
 	} else {
 		return &Argument{
 			bounds:    [2]int{n, n},
-			parseFunc: NoParseFunc,
+			parseFunc: DefaultParseFunc,
 		}
 	}
 }
@@ -226,12 +217,12 @@ func RangeArgs(min, max int) *Argument {
 	} else {
 		return &Argument{
 			bounds:    [2]int{min, max},
-			parseFunc: NoParseFunc,
+			parseFunc: DefaultParseFunc,
 		}
 	}
 }
 
-// SetParseFunc sets the parse function of the argument.
+// WithParseFunc sets the parse function of the argument.
 //
 // Parameters:
 //   - f: The function to set.
@@ -241,9 +232,9 @@ func RangeArgs(min, max int) *Argument {
 //
 // Behaviors:
 //   - If f is nil, it will be set to NoParseFunc.
-func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
+func (a *Argument) WithParseFunc(f ArgumentParseFunc) *Argument {
 	if f == nil {
-		f = NoParseFunc
+		f = DefaultParseFunc
 	}
 
 	a.parseFunc = f
@@ -251,20 +242,16 @@ func (a *Argument) SetParseFunc(f ArgumentParseFunc) *Argument {
 	return a
 }
 
-// GetMin gets the minimum number of arguments.
-//
-// Returns:
-//   - int: The minimum number of arguments.
-func (a *Argument) GetMin() int {
-	return a.bounds[0]
-}
+// ParsedArgument is the result of parsing an argument.
+type ParsedArgument struct {
+	// CutSet is the cut set of the arguments.
+	CutSet []string
 
-// GetMax gets the maximum number of arguments.
-//
-// Returns:
-//   - int: The maximum number of arguments. -1 if there is no maximum.
-func (a *Argument) GetMax() int {
-	return a.bounds[1]
+	// Data is the data of the arguments.
+	Data any
+
+	// Idx is the index of the arguments.
+	Idx int
 }
 
 // Apply applies the argument to the arguments.
@@ -273,13 +260,36 @@ func (a *Argument) GetMax() int {
 //   - args: The arguments to apply the argument to.
 //
 // Returns:
-//   - any: The result of the arguments.
+//   - *ParsedArgument: The result of the arguments.
 //   - error: An error if the argument failed to execute.
-func (a *Argument) Apply(args []string) (any, error) {
-	res, err := a.parseFunc(args)
-	if err != nil {
-		return nil, fmt.Errorf("failed to apply argument: %w", err)
+func (a *Argument) Apply(args []string) (*ParsedArgument, error) {
+	left := a.bounds[0]
+
+	if len(args) < left {
+		return nil, util.NewErrFewArguments(left, len(args))
 	}
 
-	return res, nil
+	right := a.bounds[1]
+
+	if right == -1 || right > len(args) {
+		right = len(args)
+	}
+
+	var data any
+	var err error
+
+	for i := right; i >= left; i-- {
+		cutSet := args[:i]
+
+		data, err = a.parseFunc(cutSet)
+		if err == nil {
+			return &ParsedArgument{
+				CutSet: cutSet,
+				Data:   data,
+				Idx:    i,
+			}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("error parsing arguments: %w", err)
 }

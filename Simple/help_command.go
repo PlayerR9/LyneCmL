@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	com "github.com/PlayerR9/LyneCmL/Simple/common"
+	cut "github.com/PlayerR9/LyneCmL/Common/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
@@ -16,29 +16,33 @@ var (
 
 func init() {
 	HelpCmd = &Command{
-		Name: HelpCmdOpcode,
+		Name: cut.HelpCmdOpcode,
 		Usages: []string{
 			"help [command]",
 		},
 		Brief: "Displays help information about the program or a specific command",
-		Description: com.NewDescription().AddLine(
-			"If no command is specified, the help command will display help",
-			"information about the program. Otherwise, the help command will",
-			"display help information about the specified command.",
-		).Build(),
+		Description: []string{
+			strings.Join([]string{
+				"If no command is specified, the help command will display help",
+				"information about the program. Otherwise, the help command will",
+				"display help information about the specified command.",
+			}, " "),
+		},
 		Argument: AtMostNArgs(1),
 		Run: func(p *Program, data any) error {
-			printer := ffs.NewStdPrinter(
+			configs := p.GetDisplayConfigs()
+
+			printer, trav := ffs.NewStdPrinter(
 				ffs.NewFormatter(
-					ffs.NewIndentConfig(p.GetTab(), 0),
-					ffs.NewFormatterConfig(p.GetTabSize(), p.GetSpacing()),
+					ffs.NewIndentConfig(configs.GetTabStr(), 0),
+					ffs.NewFormatterConfig(configs.TabSize, configs.Spacing),
 				),
 			)
 
 			args := data.([]string)
 
 			if len(args) == 0 {
-				err := ffs.Apply(printer, p)
+				err := p.FString(trav)
 				if err != nil {
 					return err
 				}
@@ -54,7 +58,7 @@ func init() {
 					)
 				}
 
-				err := ffs.Apply(printer, command)
+				err := command.FString(trav, WithSpacing(configs.Spacing))
 				if err != nil {
 					return err
 				}
@@ -69,5 +73,10 @@ func init() {
 
 			return nil
 		},
+	}
+
+	err := HelpCmd.Fix()
+	if err != nil {
+		panic(err)
 	}
 }

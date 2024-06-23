@@ -26,7 +26,7 @@ func (u *Status[T]) MarshalJSON() ([]byte, error) {
 
 	u.isModified = false
 
-	return json.Marshal(u.status)
+	return json.MarshalIndent(u.status, "", "  ")
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.

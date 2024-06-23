@@ -24,7 +24,7 @@ func init() {
 		),
 		Argument: AtMostNArgs(1),
 		Run: func(p *Program, args []string, data any) (any, error) {
-			printer := ffs.NewStdPrinter(
+			printer, trav := ffs.NewStdPrinter(
 				ffs.NewFormatter(
 					ffs.NewIndentConfig(p.GetTab(), 0),
 					ffs.NewFormatterConfig(p.GetTabSize(), p.GetSpacing()),
@@ -32,7 +32,7 @@ func init() {
 			)
 
 			if len(args) == 0 {
-				err := ffs.Apply(printer, p)
+				err := p.FString(trav)
 				if err != nil {
 					return nil, err
 				}
@@ -48,7 +48,7 @@ func init() {
 					)
 				}
 
-				err := ffs.Apply(printer, command)
+				err := command.FString(trav)
 				if err != nil {
 					return nil, err
 				}

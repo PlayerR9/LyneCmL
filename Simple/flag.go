@@ -4,13 +4,31 @@ import (
 	"fmt"
 	"strings"
 
-	com "github.com/PlayerR9/LyneCmL/Simple/common"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
 
-// Flager is an interface for a flag.
-type Flager interface {
-	com.Fixer
+const (
+	// ShortFlagPrefix is the prefix for short flags.
+	ShortFlagPrefix string = "-"
+
+	// LongFlagPrefix is the prefix for long flags.
+	LongFlagPrefix string = "--"
+)
+
+var (
+	// DefaultFlagArgument is the default flag argument.
+	// That is, a flag that returns the argument as a string and
+	// whose default value is an empty string.
+	DefaultFlagArgument *FlagArgument
+)
+
+func init() {
+	DefaultFlagArgument = &FlagArgument{
+		defaultVal: "",
+		parseFunc: func(arg string) (any, error) {
+			return arg, nil
+		},
+	}
 }
 
 // FlagParseFunc is a function that parses a flag argument.
@@ -21,10 +39,19 @@ type Flager interface {
 // Returns:
 //   - any: The parsed argument.
 //   - error: An error if the argument failed to parse.
-type FlagParseFunc[T any] func(arg string) (T, error)
+type FlagParseFunc func(arg string) (any, error)
 
-// Flag is a flag of type any.
-type Flag[T any] struct {
+// FlagArgument is a flag argument.
+type FlagArgument struct {
+	// defaultVal is the default value of the flag.
+	defaultVal any
+
+	// parseFunc is the function that parses the flag argument.
+	parseFunc FlagParseFunc
+}
+
+// Flag is a flag that a program can use.
+type Flag struct {
 	// LongName is the long name of the flag.
 	LongName string
 
@@ -34,53 +61,118 @@ type Flag[T any] struct {
 	// Brief is a brief description of the flag.
 	Brief string
 
-	// Usage is the usage of the flag.
-	Usage string
+	// Usages are the usages of the flag.
+	Usages []string
 
 	// Description is a description of the flag.
 	Description []string
 
-	// DefaultVal is the default value of the flag.
-	DefaultVal T
+	// value is the value of the flag.
+	value any
 
-	// ParseFunc is the function that parses the flag argument.
-	ParseFunc FlagParseFunc[T]
-
-	// HasArgument is true if the flag requires an argument. False otherwise.
-	HasArgument bool
-
-	// Value is the value of the flag. Do not set this field.
-	Value T
+	// Argument is the Argument of the flag.
+	Argument *FlagArgument
 }
 
-///////////////////////////////////////////////////////
-
-// Fix implements Flager interface.
+// NewFlagArgument creates a new flag argument.
 //
-// This never errors.
-func (f *Flag[T]) Fix() error {
-	f.LongName = strings.TrimSpace(f.LongName)
-	f.LongName = "--" + f.LongName
+// Parameters:
+//   - defaultVal: The default value of the flag.
+//   - parseFunc: The function that parses the flag argument.
+//
+// Returns:
+//   - *FlagArgument: The new flag argument.
+//
+// Behaviors:
+//   - If parseFunc is nil, then the flag is set to the default flag argument.
+func NewFlagArgument(defaultVal any, parseFunc FlagParseFunc) *FlagArgument {
+	var fa *FlagArgument
 
-	f.Brief = strings.TrimSpace(f.Brief)
-	f.Usage = strings.TrimSpace(f.Usage)
+	if parseFunc == nil {
+		fa = DefaultFlagArgument
+	} else {
+		fa = &FlagArgument{
+			defaultVal: defaultVal,
+			parseFunc:  parseFunc,
+		}
+	}
+
+	return fa
+}
+
+// NewNoFlagArgument creates a new flag argument that does not take an argument.
+//
+// Returns:
+//   - *FlagArgument: The new flag argument.
+func NewNoFlagArgument() *FlagArgument {
+	return nil
+}
+
+// Apply applies the flag to the argument.
+//
+// Parameters:
+//   - arg: The argument to apply.
+//
+// Returns:
+//   - error: An error if the flag failed to apply.
+func (f *Flag) Apply(arg string) error {
+	if f.Argument == nil {
+		f.value = true
+	} else {
+		value, err := f.Argument.parseFunc(arg)
+		if err != nil {
+			return err
+		}
+
+		f.value = value
+	}
 
 	return nil
 }
 
+// Value gets the value of the flag.
+//
+// Returns:
+//   - any: The value of the flag.
+func (f *Flag) Value() any {
+	return f.value
+}
+
+///////////////////////////////////////////////////////
+
 // FString implements the FString.FStringer interface.
-func (f *Flag[T]) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
+func (f *Flag) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	panic("not implemented")
 }
 
 // GenerateUsage implements CmlComponent interface.
 //
-// Always returns a single string.
-func (f *Flag[T]) GenerateUsage() []string {
+// Always returns at most two lines.
+func (f *Flag) GenerateUsage() []string {
+	var lines []string
+
 	var builder strings.Builder
 
-	builder.WriteString(f.LongName)
-	fmt.Fprintf(&builder, "=<%T>", f.DefaultVal)
+	if f.ShortName != 0 {
+		builder.WriteString(ShortFlagPrefix)
+		builder.WriteRune(f.ShortName)
 
-	return []string{builder.String()}
+		if f.Argument != nil {
+			fmt.Fprintf(&builder, "=<%T>", f.Argument.defaultVal)
+		}
+
+		lines = append(lines, builder.String())
+		builder.Reset()
+	}
+
+	builder.WriteString(LongFlagPrefix)
+	builder.WriteString(f.LongName)
+
+	if f.Argument != nil {
+		fmt.Fprintf(&builder, "=<%T>", f.Argument.defaultVal)
+	}
+
+	lines = append(lines, builder.String())
+
+	return lines
 }
