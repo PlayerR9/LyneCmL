@@ -116,3 +116,27 @@ func TestMakeProgram(t *testing.T) {
 		t.Errorf("ExecuteProgram failed: %s", err.Error())
 	}
 }
+
+func TestHelpCommand(t *testing.T) {
+	Program := &cms.Program{
+		Name:        "Test",
+		Brief:       "A test program.",
+		Description: NewDescription("This is a test program.").Build(),
+		Version:     "v0.1.4",
+	}
+
+	err := Fix(Program)
+	if err != nil {
+		t.Fatalf("Fix failed: %s", err.Error())
+	}
+
+	// err = ExecuteProgram(Program, []string{"Test", "now", "7", "--test", "yes"})
+	// if err != nil {
+	// 	t.Fatalf("ExecuteProgram failed: %s", err.Error())
+	// }
+
+	err = ExecuteProgram(Program, []string{"Test", "help"})
+	if err != nil {
+		t.Errorf("ExecuteProgram failed: %s", err.Error())
+	}
+}
