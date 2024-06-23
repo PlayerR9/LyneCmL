@@ -30,7 +30,7 @@ func init() {
 		},
 		Argument: AtMostNArgs(1),
 		Run: func(p *Program, data any) error {
-			configs := p.GetDisplayConfigs()
+			configs := p.Configs
 
 			printer, trav := ffs.NewStdPrinter(
 				ffs.NewFormatter(

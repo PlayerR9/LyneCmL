@@ -42,10 +42,10 @@ func TestMakeProgram(t *testing.T) {
 				return err
 			}
 
-			err = p.SavePartial("now.txt")
-			if err != nil {
-				return err
-			}
+			// err = p.SavePartial("now.txt")
+			// if err != nil {
+			// 	return err
+			// }
 
 			return nil
 		},

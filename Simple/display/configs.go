@@ -1,10 +1,29 @@
-package configs
+package display
 
 import (
+	"path"
 	"strings"
 )
 
-///////////////////////////////////////////////////////
+const (
+	// DisplayConfig is the display configuration.
+	DisplayConfig string = "display"
+
+	// InternalsConfig is the internals configuration.
+	InternalsConfig string = "internals"
+
+	// ConfigDir is the directory of the configuration files.
+	ConfigDir string = "configs"
+)
+
+var (
+	// ConfigLoc is the location of the configuration files.
+	ConfigLoc string
+)
+
+func init() {
+	ConfigLoc = path.Join(ConfigDir, "config.json")
+}
 
 // Config are the configurations for a program.
 type DisplayConfigs struct {
@@ -30,10 +49,16 @@ func (dc *DisplayConfigs) Fix() error {
 	return nil
 }
 
-// Default implements Configer interface.
-func (dc *DisplayConfigs) Default() {
-	dc.Spacing = 1
-	dc.TabSize = 3
+// NewDisplayConfigs creates a new display configuration.
+//
+// Returns:
+//   - *DisplayConfigs: The new display configuration.
+func NewDisplayConfigs() *DisplayConfigs {
+	dc := &DisplayConfigs{
+		TabSize: 3,
+		Spacing: 1,
+	}
+	return dc
 }
 
 // GetSpacingStr gets the spacing string.

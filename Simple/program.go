@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 
-	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
@@ -46,8 +45,8 @@ type Program struct {
 	// Version is the version of the program.
 	Version string
 
-	// configTable is a map of configurations that the program can use.
-	configTable map[string]cnf.Configer
+	// Configs is the configurations of the program.
+	Configs *pd.DisplayConfigs
 
 	// commands is a map of commands that the program can execute.
 	commands map[string]*Command
@@ -98,12 +97,12 @@ func (p *Program) GenerateUsage() []string {
 // Returns:
 //   - error: An error if the configuration failed to load.
 func (p *Program) LoadConfigs() error {
-	ok, err := utfm.FileExists(cnf.ConfigLoc)
+	ok, err := utfm.FileExists(pd.ConfigLoc)
 	if err != nil {
 		return err
 	}
 
-	f, err := utfm.Create(cnf.ConfigLoc, utfm.DP_All, utfm.FP_All)
+	f, err := utfm.Create(pd.ConfigLoc, utfm.DP_All, utfm.FP_All)
 	if err != nil {
 		return err
 	}
@@ -111,7 +110,7 @@ func (p *Program) LoadConfigs() error {
 
 	if !ok {
 		// Write the configuration to the file
-		data, err := json.MarshalIndent(p.configTable, "", "  ")
+		data, err := json.MarshalIndent(p.Configs, "", "  ")
 		if err != nil {
 			return err
 		}
@@ -133,16 +132,15 @@ func (p *Program) LoadConfigs() error {
 			return err
 		}
 
-		err = json.Unmarshal(data, &p.configTable)
+		err = json.Unmarshal(data, &p.Configs)
 		if err != nil {
 			return err
 		}
-	}
 
-	for key, config := range p.configTable {
-		err := config.Fix()
+		// Fix the configurations
+		err = p.Configs.Fix()
 		if err != nil {
-			return fmt.Errorf("invalid configuration for %s: %w", key, err)
+			return err
 		}
 	}
 
@@ -154,56 +152,22 @@ func (p *Program) LoadConfigs() error {
 // Returns:
 //   - error: An error if the configuration failed to save.
 func (p *Program) SaveConfigs() error {
-	data, err := json.MarshalIndent(p.configTable, "", "  ")
+	data, err := json.MarshalIndent(p.Configs, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(cnf.ConfigDir, utfm.DP_All)
+	err = os.MkdirAll(pd.ConfigDir, utfm.DP_All)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(cnf.ConfigLoc, data, utfm.FP_All)
+	err = os.WriteFile(pd.ConfigLoc, data, utfm.FP_All)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// GetConfigs gets the configuration.
-//
-// Parameters:
-//   - key: The key of the configuration.
-//
-// Returns:
-//   - Configer: The configuration. Nil if it does not exist.
-func (p *Program) GetConfigs(key string) cnf.Configer {
-	config, ok := p.configTable[key]
-	if !ok {
-		return nil
-	}
-
-	return config
-}
-
-// AddConfig adds a configuration to the configuration table.
-//
-// Parameters:
-//   - key: The key of the configuration.
-//   - config: The configuration to add.
-func (p *Program) AddConfig(key string, config cnf.Configer) {
-	if config == nil {
-		return
-	}
-
-	_, ok := p.configTable[key]
-	if ok {
-		return
-	}
-
-	p.configTable[key] = config
 }
 
 ///////////////////////////////////////////////////////
@@ -344,16 +308,6 @@ func (p *Program) SetCommands(cmds ...*Command) {
 			p.commands[cmd.Name] = cmd
 		}
 	}
-}
-
-// GetDisplayConfigs gets the display configurations of the program.
-//
-// Returns:
-//   - *cnf.DisplayConfigs: The display configurations.
-func (p *Program) GetDisplayConfigs() *cnf.DisplayConfigs {
-	config := p.configTable[cnf.DisplayConfig].(*cnf.DisplayConfigs)
-
-	return config
 }
 
 // Println prints a line to the program's buffer.

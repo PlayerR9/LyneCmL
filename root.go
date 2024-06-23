@@ -7,7 +7,6 @@ import (
 
 	prs "github.com/PlayerR9/LyneCmL/Common/Parser"
 	cms "github.com/PlayerR9/LyneCmL/Simple"
-	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ue "github.com/PlayerR9/MyGoLib/Units/errors"
 )
@@ -96,9 +95,7 @@ func ExecuteProgram(p *cms.Program, args []string) error {
 		return fmt.Errorf("in parsing arguments: %w", err)
 	}
 
-	dc := p.GetConfigs(cnf.DisplayConfig).(*cnf.DisplayConfigs)
-
-	display := pd.NewDisplay(dc, log.New(os.Stdout, "["+p.Name+"]: ", log.LstdFlags))
+	display := pd.NewDisplay(p.Configs, log.New(os.Stdout, "["+p.Name+"]: ", log.LstdFlags))
 
 	p.SetDisplay(display)
 

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	llq "github.com/PlayerR9/MyGoLib/ListLike/Queuer"
 	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
@@ -35,7 +34,7 @@ type Display struct {
 	cancel context.CancelFunc
 
 	// configs is the configurations of the display.
-	configs *cnf.DisplayConfigs
+	configs *DisplayConfigs
 
 	// logger is the logger of the display.
 	logger *log.Logger
@@ -48,7 +47,7 @@ type Display struct {
 //
 // Returns:
 //   - *Display: The new display.
-func NewDisplay(config *cnf.DisplayConfigs, logger *log.Logger) *Display {
+func NewDisplay(config *DisplayConfigs, logger *log.Logger) *Display {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	buffer := sfb.NewBuffer[Msger]()

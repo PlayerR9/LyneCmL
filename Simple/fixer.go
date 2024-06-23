@@ -6,7 +6,7 @@ import (
 	"unicode"
 
 	cut "github.com/PlayerR9/LyneCmL/Common/util"
-	cnf "github.com/PlayerR9/LyneCmL/Simple/configs"
+	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
 )
@@ -324,6 +324,13 @@ func (c *Command) Fix() error {
 //
 // This never errors.
 func (p *Program) Fix() error {
+	// Fix: name
+	name, err := fixName(p.Name)
+	if err != nil {
+		return fmt.Errorf("while fixing name: %w", err)
+	}
+
+	p.Name = name
 
 	// Fix: brief
 	p.Brief = fixSpacing(p.Brief)
@@ -384,74 +391,14 @@ func (p *Program) Fix() error {
 	p.flags = flagMap
 
 	// Fix: configTable
-	if p.configTable == nil {
-		p.configTable = make(map[string]cnf.Configer)
-
-		conf1 := new(cnf.DisplayConfigs)
-		conf1.Default()
-		p.configTable[cnf.DisplayConfig] = conf1
-
-		conf2 := new(cnf.ProgConfig)
-		conf2.Default()
-		p.configTable[cnf.InternalsConfig] = conf2
+	if p.Configs == nil {
+		p.Configs = pd.NewDisplayConfigs()
 	}
 
 	err = p.LoadConfigs()
 	if err != nil {
 		return fmt.Errorf("while loading configs: %w", err)
 	}
-
-	brokenConfigs := false
-
-	conf, ok := p.configTable[cnf.DisplayConfig]
-	if !ok {
-		def := new(cnf.DisplayConfigs)
-		def.Default()
-		p.configTable[cnf.DisplayConfig] = def
-
-		brokenConfigs = true
-	} else {
-		_, ok := conf.(*cnf.DisplayConfigs)
-		if !ok {
-			brokenConfigs = true
-		}
-	}
-
-	conf, ok = p.configTable[cnf.InternalsConfig]
-	if !ok {
-		def := new(cnf.ProgConfig)
-		def.Default()
-		p.configTable[cnf.InternalsConfig] = def
-
-		brokenConfigs = true
-	} else {
-		_, ok := conf.(*cnf.ProgConfig)
-		if !ok {
-			brokenConfigs = true
-		}
-	}
-
-	if brokenConfigs {
-		err = p.SaveConfigs()
-		if err != nil {
-			return fmt.Errorf("while saving configs: %w", err)
-		}
-
-		err = p.LoadConfigs()
-		if err != nil {
-			return fmt.Errorf("while loading configs: %w", err)
-		}
-	}
-
-	// Fix: name
-	conf1 := p.configTable[cnf.InternalsConfig].(*cnf.ProgConfig)
-
-	name, err := fixName(conf1.ProgName)
-	if err != nil {
-		return fmt.Errorf("while fixing name: %w", err)
-	}
-
-	conf1.ProgName = name
 
 	return nil
 }
