@@ -2,7 +2,7 @@ module github.com/PlayerR9/LyneCmL
 
 go 1.22.4
 
-require github.com/PlayerR9/MyGoLib v0.3.32
+require github.com/PlayerR9/MyGoLib v0.3.33
 
 require (
 	github.com/gdamore/encoding v1.0.1 // indirect

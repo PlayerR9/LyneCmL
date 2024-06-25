@@ -245,7 +245,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 		ta.SetHead("Usage:")
 
 		for _, usage := range c.Usages {
-			ta.AddRow([]string{usage})
+			ta.AddRow(usage)
 		}
 
 		lines, _ := ta.Build(tabSize, true)
@@ -264,7 +264,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 		for _, flag := range c.flags {
 			str := strings.Join(flag.Usages, settings.Spacing)
 
-			ta.AddRow([]string{str, flag.Brief})
+			ta.AddRow(str, flag.Brief)
 		}
 
 		lines, _ := ta.Build(tabSize, true)
@@ -285,7 +285,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	ta.SetHead("Description:")
 	for _, line := range c.Description {
-		ta.AddRow([]string{line})
+		ta.AddRow(line)
 	}
 
 	lines, _ := ta.Build(tabSize, true)
