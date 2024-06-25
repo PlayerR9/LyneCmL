@@ -6,7 +6,7 @@ import (
 
 	util "github.com/PlayerR9/LyneCmL/Complex/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	uc "github.com/PlayerR9/MyGoLib/Units/common"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
 
@@ -222,7 +222,7 @@ func handleCmd(p *Program, args []string, cmd *Command) (*Parsed, error) {
 			return
 		}
 
-		err = ue.NewErrPanic(r)
+		err = uc.NewErrPanic(r)
 
 		err := p.Panic(err)
 		if err != nil {

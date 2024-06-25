@@ -9,7 +9,7 @@ import (
 	pd "github.com/PlayerR9/LyneCmL/Complex/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	uc "github.com/PlayerR9/MyGoLib/Units/common"
 	us "github.com/PlayerR9/MyGoLib/Units/slice"
 )
 
@@ -215,7 +215,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	table, err = fs.TabAlign(table, 0, p.GetTabSize())
 	if err != nil {
-		return ue.NewErrWhile("tab aligning", err)
+		return uc.NewErrWhile("tab aligning", err)
 	}
 
 	err = trav.AddLine("Commands:")

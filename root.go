@@ -8,7 +8,7 @@ import (
 	prs "github.com/PlayerR9/LyneCmL/Common/Parser"
 	cms "github.com/PlayerR9/LyneCmL/Simple"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	uc "github.com/PlayerR9/MyGoLib/Units/common"
 )
 
 // Fix is a function that fixes the program. This should be
@@ -22,7 +22,7 @@ import (
 //   - error: An error if the program failed to fix.
 func Fix(p *cms.Program) error {
 	if p == nil {
-		return ue.NewErrNilParameter("program")
+		return uc.NewErrNilParameter("program")
 	}
 
 	err := p.Fix()
@@ -108,7 +108,7 @@ func ExecuteProgram(p *cms.Program, args []string) error {
 			return
 		}
 
-		pe := ue.NewErrPanic(r)
+		pe := uc.NewErrPanic(r)
 
 		err := p.Panic(pe)
 		if err != nil {

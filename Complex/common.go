@@ -5,7 +5,7 @@ import (
 
 	pd "github.com/PlayerR9/LyneCmL/Complex/display"
 	util "github.com/PlayerR9/LyneCmL/Complex/util"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	uc "github.com/PlayerR9/MyGoLib/Units/common"
 )
 
 const (
@@ -24,14 +24,14 @@ const (
 func ExecuteProgram(p *Program, args []string) error {
 	switch len(args) {
 	case 0:
-		return ue.NewErrInvalidParameter(
+		return uc.NewErrInvalidParameter(
 			"args",
-			ue.NewErrEmpty(args),
+			uc.NewErrEmpty(args),
 		)
 	case 1:
-		return ue.NewErrInvalidParameter(
+		return uc.NewErrInvalidParameter(
 			"args",
-			ue.NewErrInvalidUsage(
+			uc.NewErrInvalidUsage(
 				fmt.Errorf("missing command"),
 				"Use \"help\" to see a list of available commands.",
 			),
@@ -39,9 +39,9 @@ func ExecuteProgram(p *Program, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return ue.NewErrInvalidParameter(
+		return uc.NewErrInvalidParameter(
 			"args",
-			ue.NewErrEmpty(args),
+			uc.NewErrEmpty(args),
 		)
 	}
 

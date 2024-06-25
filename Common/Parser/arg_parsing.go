@@ -9,7 +9,7 @@ import (
 
 	cms "github.com/PlayerR9/LyneCmL/Simple"
 	lls "github.com/PlayerR9/MyGoLib/ListLike/Stacker"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	uc "github.com/PlayerR9/MyGoLib/Units/common"
 	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
 )
 
@@ -183,7 +183,7 @@ func (fp *flagParser) parseOne(header string, isShort bool) error {
 	if len(runes) == 1 {
 		right, err = fp.parseSingleFlag(header, right, true)
 		if err != nil {
-			ok := ue.As[*ErrFlagNotFound](err)
+			ok := uc.Is[*ErrFlagNotFound](err)
 			if ok {
 				err = nil
 			}
@@ -194,7 +194,7 @@ func (fp *flagParser) parseOne(header string, isShort bool) error {
 		for _, letter := range runes {
 			right, err = fp.parseSingleFlag(string(letter), right, true)
 			if err != nil {
-				ok := ue.As[*ErrFlagNotFound](err)
+				ok := uc.Is[*ErrFlagNotFound](err)
 				if ok {
 					err = fmt.Errorf("invalid merged short flags -%s", header)
 				}

@@ -6,7 +6,7 @@ import (
 
 	cut "github.com/PlayerR9/LyneCmL/Common/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	ue "github.com/PlayerR9/MyGoLib/Units/errors"
+	uc "github.com/PlayerR9/MyGoLib/Units/common"
 )
 
 var (
@@ -52,7 +52,7 @@ func init() {
 
 				command, ok := p.commands[name]
 				if !ok {
-					return ue.NewErrInvalidUsage(
+					return uc.NewErrInvalidUsage(
 						fmt.Errorf("command %q is not a valid command", name),
 						"Use command \"help\" to see the list of available commands",
 					)
