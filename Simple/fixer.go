@@ -245,6 +245,13 @@ func (c *Command) Fix() error {
 
 	c.Name = name
 
+	// Fix: argument
+	if c.Argument == nil {
+		c.Argument = NoArgument
+	}
+
+	c.Argument.Fix()
+
 	// Fix: usages
 	if c.Usages != nil {
 		for i := 0; i < len(c.Usages); i++ {
@@ -278,13 +285,6 @@ func (c *Command) Fix() error {
 			c.Description = nil
 		}
 	}
-
-	// Fix: argument
-	if c.Argument == nil {
-		c.Argument = NoArgument
-	}
-
-	c.Argument.Fix()
 
 	// Fix: run function
 	if c.Run == nil {
