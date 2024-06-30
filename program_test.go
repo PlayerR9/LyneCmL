@@ -139,4 +139,6 @@ func TestHelpCommand(t *testing.T) {
 	if err != nil {
 		t.Errorf("ExecuteProgram failed: %s", err.Error())
 	}
+
+	t.Fatalf("Test failed")
 }
