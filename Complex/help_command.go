@@ -54,7 +54,7 @@ func init() {
 				}
 			}
 
-			pages := ffs.Stringfy(printer.GetPages())
+			pages := ffs.Stringfy(printer.GetPages(), 1)
 
 			err := p.Println(strings.Join(pages, "\f"))
 			if err != nil {

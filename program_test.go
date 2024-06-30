@@ -93,7 +93,7 @@ func TestMakeProgram(t *testing.T) {
 		Name:        "Test",
 		Brief:       "A test program.",
 		Description: NewDescription("This is a test program.").Build(),
-		Version:     "v0.1.4",
+		Version:     "v0.1.10",
 	}
 
 	Program.SetCommands(
