@@ -289,6 +289,11 @@ func (ep *ExecProcess) Execute(p *Program) error {
 		return fmt.Errorf("error printing: %w", err)
 	}
 
+	err = p.Println()
+	if err != nil {
+		return fmt.Errorf("error printing: %w", err)
+	}
+
 	p.flags = ep.cmd.flags
 
 	err = ep.cmd.Run(p, ep.data)

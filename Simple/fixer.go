@@ -11,19 +11,24 @@ import (
 	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
 )
 
-// isValidLetterName checks if the character is a valid letter name.
+// is_valid_letter_name checks if the character is a valid letter name.
 //
 // Parameters:
 //   - char: The character to check.
 //
 // Returns:
 //   - bool: True if the character is a valid letter name. False otherwise.
-func isValidLetterName(char rune) bool {
+func is_valid_letter_name(char rune) bool {
 	switch char {
 	case '-', '_':
 		return true
 	default:
 		ok := unicode.IsLetter(char)
+		if ok {
+			return true
+		}
+
+		ok = unicode.IsNumber(char)
 		if !ok {
 			return false
 		}
@@ -32,7 +37,7 @@ func isValidLetterName(char rune) bool {
 	return true
 }
 
-// fixName fixes the name by removing invalid characters.
+// fix_name fixes the name by removing invalid characters.
 //
 // Parameters:
 //   - str: The string to fix.
@@ -40,7 +45,7 @@ func isValidLetterName(char rune) bool {
 // Returns:
 //   - string: The fixed string.
 //   - error: An error if the string failed to fix.
-func fixName(str string) (string, error) {
+func fix_name(str string) (string, error) {
 	runes, err := utse.ToUTF8Runes(str)
 	if err != nil {
 		return "", err
@@ -48,11 +53,10 @@ func fixName(str string) (string, error) {
 
 	left := -1
 
-	for i := 0; i < len(runes); i++ {
-		ok := isValidLetterName(runes[i])
+	for i := 0; i < len(runes) && left == -1; i++ {
+		ok := is_valid_letter_name(runes[i])
 		if ok && runes[i] != '-' {
 			left = i
-			break
 		}
 	}
 
@@ -60,10 +64,12 @@ func fixName(str string) (string, error) {
 		return "", nil
 	}
 
+	runes = runes[left:]
+
 	right := -1
 
 	for i := len(runes) - 1; i >= 0; i-- {
-		ok := isValidLetterName(runes[i])
+		ok := is_valid_letter_name(runes[i])
 		if ok && runes[i] != '-' {
 			right = i + 1
 			break
@@ -77,9 +83,17 @@ func fixName(str string) (string, error) {
 	runes = runes[:right]
 
 	for i, char := range runes {
-		ok := isValidLetterName(char)
+		ok := is_valid_letter_name(char)
 		if !ok {
 			return "", fmt.Errorf("invalid character at index %d: %c", i+left, char)
+		}
+	}
+
+	// Check if the first character is a letter.
+	if len(runes) > 0 {
+		ok := unicode.IsLetter(runes[0])
+		if !ok {
+			return "", fmt.Errorf("first character is not a letter: %c", runes[0])
 		}
 	}
 
@@ -175,7 +189,7 @@ func (a *Argument) Fix() error {
 // Fix implements Flager interface.
 func (f *Flag) Fix() error {
 	// Fix: long name
-	longName, err := fixName(f.LongName)
+	longName, err := fix_name(f.LongName)
 	if err != nil {
 		return fmt.Errorf("while fixing long name: %w", err)
 	}
@@ -184,7 +198,7 @@ func (f *Flag) Fix() error {
 
 	// Fix: short name
 	if f.ShortName != 0 {
-		ok := isValidLetterName(f.ShortName)
+		ok := is_valid_letter_name(f.ShortName)
 		if !ok {
 			return fmt.Errorf("invalid short name: %c", f.ShortName)
 		}
@@ -238,7 +252,7 @@ func (f *Flag) Fix() error {
 // Fix implements the CmlComponent interface.
 func (c *Command) Fix() error {
 	// Fix: name
-	name, err := fixName(c.Name)
+	name, err := fix_name(c.Name)
 	if err != nil {
 		return fmt.Errorf("while fixing name: %w", err)
 	}
@@ -325,7 +339,7 @@ func (c *Command) Fix() error {
 // This never errors.
 func (p *Program) Fix() error {
 	// Fix: name
-	name, err := fixName(p.Name)
+	name, err := fix_name(p.Name)
 	if err != nil {
 		return fmt.Errorf("while fixing name: %w", err)
 	}

@@ -2,7 +2,7 @@ module github.com/PlayerR9/LyneCmL
 
 go 1.22.5
 
-require github.com/PlayerR9/MyGoLib v0.3.36
+require github.com/PlayerR9/MyGoLib v0.3.37
 
 require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -14,6 +14,6 @@ require (
 require (
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/gdamore/tcell v1.4.0
-	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
+	golang.org/x/exp v0.0.0-20240707233637-46b078467d37 // indirect
 	golang.org/x/text v0.16.0 // indirect
 )

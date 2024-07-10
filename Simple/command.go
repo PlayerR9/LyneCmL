@@ -223,7 +223,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 		opt(settings)
 	}
 
-	tabSize := trav.GetConfig().GetTabSize()
+	tab_size := trav.GetConfig().GetTabSize()
 
 	// Command: <name>
 	err := trav.AddJoinedLine(" ", "Command:", c.Name)
@@ -248,7 +248,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 			ta.AddRow(usage)
 		}
 
-		lines, _ := ta.Build(tabSize, true)
+		lines, _ := ta.Build(tab_size, true)
 
 		err = trav.AddLines(lines)
 		if err != nil {
@@ -258,7 +258,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	// Flags:
 	// 	<flags>
-	if c.flags != nil {
+	if len(c.flags) > 0 {
 		ta.SetHead("Flags:")
 
 		for _, flag := range c.flags {
@@ -267,7 +267,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 			ta.AddRow(str, flag.Brief)
 		}
 
-		lines, _ := ta.Build(tabSize, true)
+		lines, _ := ta.Build(tab_size, true)
 
 		err = trav.AddLines(lines)
 		if err != nil {
@@ -288,7 +288,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 		ta.AddRow(line)
 	}
 
-	lines, _ := ta.Build(tabSize, true)
+	lines, _ := ta.Build(tab_size, true)
 
 	err = trav.AddLines(lines)
 	if err != nil {

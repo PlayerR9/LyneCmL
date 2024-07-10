@@ -188,7 +188,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	if p.Brief == "" {
 		err = trav.AddJoinedLine(" ", "Program:", p.Name)
 	} else {
-		err = trav.AddJoinedLine(" ", "Program:", p.Name, "-", p.Brief)
+		err = trav.AddJoinedLine(" ", "Program:", p.Name, "—", p.Brief)
 	}
 	if err != nil {
 		return err
@@ -260,7 +260,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 
 	// Flags:
 	// 	<flags>
-	if p.flags != nil {
+	if len(p.flags) > 0 {
 		ta.SetHead("Flags:")
 
 		for _, flag := range p.flags {
