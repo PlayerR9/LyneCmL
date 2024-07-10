@@ -1,0 +1,1 @@
+- [ ] Fix the fact that, in the command list usage, the vertical alignment of the name, usage, and brief are not aligned properly.

@@ -281,8 +281,9 @@ func (ep *ExecProcess) Execute(p *Program) error {
 	var builder strings.Builder
 
 	builder.WriteString("Running command ")
-	builder.WriteString(ep.cmd.Name)
-	builder.WriteString("...")
+	qn := strconv.Quote(ep.cmd.Name)
+	builder.WriteString(qn)
+	builder.WriteString(" ...")
 
 	err := p.Println(builder.String())
 	if err != nil {
