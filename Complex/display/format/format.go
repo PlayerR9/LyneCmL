@@ -5,7 +5,7 @@ import (
 	"slices"
 	"sync"
 
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
+	ddt "github.com/PlayerR9/LyneCmL/Complex/display/drawtable"
 	uc "github.com/PlayerR9/MyGoLib/Units/common"
 )
 

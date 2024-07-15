@@ -7,7 +7,7 @@ import (
 
 	"github.com/gdamore/tcell"
 
-	ddt "github.com/PlayerR9/MyGoLib/Display/drawtable"
+	ddt "github.com/PlayerR9/LyneCmL/Complex/display/drawtable"
 	rws "github.com/PlayerR9/MyGoLib/Safe/RWSafe"
 )
 

@@ -3,13 +3,12 @@ package drawtable
 import (
 	"strings"
 
-	cdt "github.com/PlayerR9/MyGoLib/CustomData/Table"
 	"github.com/gdamore/tcell"
 )
 
 // DrawTable represents a table of cells that can be drawn to the screen.
 type DrawTable struct {
-	*cdt.Table[*ColoredUnit]
+	*Table
 }
 
 // NewDrawTable creates a new DrawTable with the given width and height.
@@ -24,7 +23,7 @@ type DrawTable struct {
 // Behaviors:
 //   - If the width or height is negative, the absolute value is used.
 func NewDrawTable(width, height int) *DrawTable {
-	table := cdt.NewTable[*ColoredUnit](width, height)
+	table := NewTable(width, height)
 
 	return &DrawTable{table}
 }
