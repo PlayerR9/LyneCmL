@@ -2,7 +2,9 @@ module github.com/PlayerR9/LyneCmL
 
 go 1.22.5
 
-require github.com/PlayerR9/MyGoLib v0.4.2
+require github.com/PlayerR9/MyGoLib v0.4.3
+
+require github.com/PlayerR9/go_generator v0.1.0
 
 require (
 	github.com/PlayerR9/stack v0.1.0
