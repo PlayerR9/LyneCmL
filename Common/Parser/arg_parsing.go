@@ -8,9 +8,9 @@ import (
 	"unicode/utf8"
 
 	cms "github.com/PlayerR9/LyneCmL/Simple"
-	lls "github.com/PlayerR9/MyGoLib/ListLike/Stacker"
 	uc "github.com/PlayerR9/MyGoLib/Units/common"
 	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
+	lls "github.com/PlayerR9/stack/stack"
 )
 
 const (
