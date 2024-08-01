@@ -10,7 +10,7 @@ import (
 	cms "github.com/PlayerR9/LyneCmL/Simple"
 	uc "github.com/PlayerR9/MyGoLib/Units/common"
 	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
-	lls "github.com/PlayerR9/stack/stack"
+	lls "github.com/PlayerR9/listlike/stack"
 )
 
 const (
