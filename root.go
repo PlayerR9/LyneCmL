@@ -8,7 +8,7 @@ import (
 	prs "github.com/PlayerR9/LyneCmL/Common/Parser"
 	cms "github.com/PlayerR9/LyneCmL/Simple"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
-	uc "github.com/PlayerR9/MyGoLib/Units/common"
+	uc "github.com/PlayerR9/lib_units/common"
 )
 
 // Fix is a function that fixes the program. This should be

@@ -3,14 +3,12 @@ package ConfigManager
 import (
 	"encoding/json"
 	"sync"
-
-	uc "github.com/PlayerR9/MyGoLib/Units/common"
 )
 
 // Status is a type that represents the status of a set of keys.
-type Status[T uc.Enumer] struct {
+type Status struct {
 	// status is the status of the keys.
-	status map[T]bool
+	status map[string]bool
 
 	// isModified is a flag that indicates if the status has been modified.
 	isModified bool
@@ -20,7 +18,7 @@ type Status[T uc.Enumer] struct {
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (u *Status[T]) MarshalJSON() ([]byte, error) {
+func (u *Status) MarshalJSON() ([]byte, error) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
@@ -30,11 +28,11 @@ func (u *Status[T]) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
-func (u *Status[T]) UnmarshalJSON(data []byte) error {
+func (u *Status) UnmarshalJSON(data []byte) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	var status map[T]bool
+	var status map[string]bool
 
 	err := json.Unmarshal(data, &status)
 	if err != nil {
@@ -54,13 +52,13 @@ func (u *Status[T]) UnmarshalJSON(data []byte) error {
 //
 // Returns:
 //   - *Status: The new Status object.
-func NewStatus[T uc.Enumer](keys []T) *Status[T] {
-	status := make(map[T]bool, len(keys))
+func NewStatus(keys []string) *Status {
+	status := make(map[string]bool, len(keys))
 	for _, key := range keys {
 		status[key] = false
 	}
 
-	return &Status[T]{
+	return &Status{
 		status:     status,
 		isModified: false,
 	}
@@ -74,7 +72,7 @@ func NewStatus[T uc.Enumer](keys []T) *Status[T] {
 //
 // Behaviors:
 //   - If the key does not exist, the function does nothing.
-func (u *Status[T]) Change(key T, value bool) {
+func (u *Status) Change(key string, value bool) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -90,8 +88,8 @@ func (u *Status[T]) Change(key T, value bool) {
 // GetStatus returns the status of the keys.
 //
 // Returns:
-//   - map[T]bool: The status of the keys.
-func (u *Status[T]) GetStatus() map[T]bool {
+//   - map[string]bool: The status of the keys.
+func (u *Status) GetStatus() map[string]bool {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
@@ -108,7 +106,7 @@ func (u *Status[T]) GetStatus() map[T]bool {
 //
 // Behaviors:
 //   - If the key does not exist, the function returns false.
-func (u *Status[T]) GetValue(key T) bool {
+func (u *Status) GetValue(key string) bool {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
@@ -124,7 +122,7 @@ func (u *Status[T]) GetValue(key T) bool {
 //
 // Returns:
 //   - bool: True if the status has been modified, false otherwise.
-func (u *Status[T]) IsModified() bool {
+func (u *Status) IsModified() bool {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 

@@ -8,9 +8,9 @@ import (
 	"sync"
 
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	llq "github.com/PlayerR9/MyGoLib/ListLike/Queuer"
-	sfb "github.com/PlayerR9/MyGoLib/Safe/Buffer"
 	ufm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
+	llq "github.com/PlayerR9/listlike/queue"
+	sfb "github.com/PlayerR9/safe/Buffer"
 )
 
 ///////////////////////////////////////////////////////

@@ -11,8 +11,8 @@ import (
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	us "github.com/PlayerR9/MyGoLib/Units/slice"
 	utfm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
+	us "github.com/PlayerR9/lib_units/slices"
 )
 
 var (

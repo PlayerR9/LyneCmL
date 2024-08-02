@@ -2,7 +2,7 @@ package util
 
 import (
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	uo "github.com/PlayerR9/MyGoLib/Utility/object"
+	uo "github.com/PlayerR9/lib_units/object"
 )
 
 // CmlComponent is a component of a CML program.

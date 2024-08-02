@@ -7,8 +7,8 @@ import (
 
 	cut "github.com/PlayerR9/LyneCmL/Common/util"
 	pd "github.com/PlayerR9/LyneCmL/Simple/display"
-	us "github.com/PlayerR9/MyGoLib/Units/slice"
-	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
+	luch "github.com/PlayerR9/lib_units/runes"
+	us "github.com/PlayerR9/lib_units/slices"
 )
 
 // is_valid_letter_name checks if the character is a valid letter name.
@@ -46,7 +46,7 @@ func is_valid_letter_name(char rune) bool {
 //   - string: The fixed string.
 //   - error: An error if the string failed to fix.
 func fix_name(str string) (string, error) {
-	runes, err := utse.ToUTF8Runes(str)
+	runes, err := luch.StringToUtf8(str)
 	if err != nil {
 		return "", err
 	}

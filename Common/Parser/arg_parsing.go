@@ -8,8 +8,8 @@ import (
 	"unicode/utf8"
 
 	cms "github.com/PlayerR9/LyneCmL/Simple"
-	uc "github.com/PlayerR9/MyGoLib/Units/common"
-	utse "github.com/PlayerR9/MyGoLib/Utility/StringExt"
+	uc "github.com/PlayerR9/lib_units/common"
+	luch "github.com/PlayerR9/lib_units/runes"
 	lls "github.com/PlayerR9/listlike/stack"
 )
 
@@ -175,9 +175,9 @@ func (fp *flagParser) parseOne(header string, isShort bool) error {
 		return nil
 	}
 
-	runes, err := utse.ToUTF8Runes(header)
+	runes, err := luch.StringToUtf8(header)
 	if err != nil {
-		return fmt.Errorf("error converting to runes: %w", err)
+		return err
 	}
 
 	if len(runes) == 1 {
