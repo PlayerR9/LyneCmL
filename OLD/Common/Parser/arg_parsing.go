@@ -7,10 +7,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	cms "github.com/PlayerR9/LyneCmL/Simple"
+	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
+	luch "github.com/PlayerR9/go-commons/runes"
+	lls "github.com/PlayerR9/go-commons/stack"
 	uc "github.com/PlayerR9/lib_units/common"
-	luch "github.com/PlayerR9/lib_units/runes"
-	lls "github.com/PlayerR9/listlike/stack"
 )
 
 const (
@@ -341,7 +341,7 @@ func ParseArgs(commandMap map[string]*cms.Command, args []string) (lls.Stacker[*
 
 	p := &Parser{
 		argsLeft: args,
-		execList: lls.NewArrayStack[*cms.ExecProcess](),
+		execList: lls.NewStack[*cms.ExecProcess](),
 	}
 
 	cmd, ok := commandMap[args[0]]
@@ -366,7 +366,7 @@ func ParseArgs(commandMap map[string]*cms.Command, args []string) (lls.Stacker[*
 type Parser struct {
 	argsLeft []string
 
-	execList *lls.ArrayStack[*cms.ExecProcess]
+	execList *lls.Stack[*cms.ExecProcess]
 }
 
 // handleCmd handles the command by validating the arguments and running the command.

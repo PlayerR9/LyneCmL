@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	cut "github.com/PlayerR9/LyneCmL/Common/util"
+	cut "github.com/PlayerR9/LyneCml/OLD/Common/util"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	uc "github.com/PlayerR9/lib_units/common"
 )

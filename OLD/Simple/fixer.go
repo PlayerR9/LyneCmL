@@ -5,10 +5,10 @@ import (
 	"strings"
 	"unicode"
 
-	cut "github.com/PlayerR9/LyneCmL/Common/util"
-	pd "github.com/PlayerR9/LyneCmL/Simple/display"
-	luch "github.com/PlayerR9/lib_units/runes"
-	us "github.com/PlayerR9/lib_units/slices"
+	cut "github.com/PlayerR9/LyneCml/OLD/Common/util"
+	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
+	gcch "github.com/PlayerR9/go-commons/runes"
+	gcslc "github.com/PlayerR9/go-commons/slices"
 )
 
 // is_valid_letter_name checks if the character is a valid letter name.
@@ -46,7 +46,7 @@ func is_valid_letter_name(char rune) bool {
 //   - string: The fixed string.
 //   - error: An error if the string failed to fix.
 func fix_name(str string) (string, error) {
-	runes, err := luch.StringToUtf8(str)
+	runes, err := gcch.StringToUtf8(str)
 	if err != nil {
 		return "", err
 	}
@@ -218,7 +218,7 @@ func (f *Flag) Fix() error {
 			f.Usages[i] = fixed
 		}
 
-		f.Usages = us.RemoveEmpty(f.Usages)
+		f.Usages = gcslc.RemoveEmpty(f.Usages)
 	}
 
 	if len(f.Usages) == 0 {
@@ -273,7 +273,7 @@ func (c *Command) Fix() error {
 			c.Usages[i] = fixed
 		}
 
-		c.Usages = us.RemoveEmpty(c.Usages)
+		c.Usages = gcslc.RemoveEmpty(c.Usages)
 	}
 
 	if len(c.Usages) == 0 {

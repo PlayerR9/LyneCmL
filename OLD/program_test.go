@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	cms "github.com/PlayerR9/LyneCmL/Simple"
+	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
 )
 
 // TestMakeProgram tests the MakeProgram function.

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	uc "github.com/PlayerR9/lib_units/common"
+	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
 var (
@@ -164,7 +164,7 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 			return func(p *Program, data any) error {
 				_, err := setupFunc(p, data)
 				if err != nil {
-					return uc.NewErrWhile("setup", err)
+					return gcers.NewErrWhile("setup", err)
 				}
 
 				return nil
@@ -183,12 +183,12 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 
 				err := p.Println(str)
 				if err != nil {
-					return uc.NewErrWhile("print", err)
+					return gcers.NewErrWhile("print", err)
 				}
 
 				res, err = phase.RunFunc(p, res, data)
 				if err != nil {
-					return uc.NewErrWhile(phase.Name, err)
+					return gcers.NewErrWhile(phase.Name, err)
 				}
 			}
 
@@ -198,7 +198,7 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 		return func(p *Program, data any) error {
 			res, err := setupFunc(p, data)
 			if err != nil {
-				return uc.NewErrWhile("setup", err)
+				return gcers.NewErrWhile("setup", err)
 			}
 
 			for i, phase := range phases {
@@ -206,12 +206,12 @@ func MakeExecPhases(setupFunc PhaseSetupFunc, phases ...*Phase) RunFunc {
 
 				err := p.Println(str)
 				if err != nil {
-					return uc.NewErrWhile("print", err)
+					return gcers.NewErrWhile("print", err)
 				}
 
 				res, err = phase.RunFunc(p, res, data)
 				if err != nil {
-					return uc.NewErrWhile(phase.Name, err)
+					return gcers.NewErrWhile(phase.Name, err)
 				}
 			}
 
@@ -270,7 +270,7 @@ func NewExecProcess(args []string, data any, cmd *Command, flagLeft []*Flag) *Ex
 //   - error: An error if the command failed to run.
 func (ep *ExecProcess) Execute(p *Program) error {
 	if p == nil {
-		return uc.NewErrNilParameter("program")
+		return gcers.NewErrNilParameter("program")
 	}
 
 	ok := p.display.IsDone()

@@ -5,7 +5,7 @@ import (
 
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	us "github.com/PlayerR9/lib_units/slices"
+	us "github.com/PlayerR9/go-commons/slices"
 )
 
 ///////////////////////////////////////////////////////

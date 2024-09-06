@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	px "github.com/PlayerR9/LyneCmL/Common/parsing"
+	px "github.com/PlayerR9/LyneCml/OLD/Common/parsing"
 )
 
 type TokenType int

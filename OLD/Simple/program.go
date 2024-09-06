@@ -8,16 +8,16 @@ import (
 	"path"
 	"strings"
 
-	pd "github.com/PlayerR9/LyneCmL/Simple/display"
+	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
 	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	utfm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
-	us "github.com/PlayerR9/lib_units/slices"
+	gcfm "github.com/PlayerR9/go-commons/file_manager"
+	gcslc "github.com/PlayerR9/go-commons/slices"
 )
 
 var (
 	// FilterInvalidCmd is a filter that filters out invalid commands.
-	FilterInvalidCmd us.PredicateFilter[*Command]
+	FilterInvalidCmd gcslc.PredicateFilter[*Command]
 )
 
 func init() {
@@ -97,12 +97,12 @@ func (p *Program) GenerateUsage() []string {
 // Returns:
 //   - error: An error if the configuration failed to load.
 func (p *Program) LoadConfigs() error {
-	ok, err := utfm.FileExists(pd.ConfigLoc)
+	ok, err := gcfm.FileExists(pd.ConfigLoc)
 	if err != nil {
 		return err
 	}
 
-	f, err := utfm.Create(pd.ConfigLoc, utfm.DP_All, utfm.FP_All)
+	f, err := gcfm.Create(pd.ConfigLoc, gcfm.DP_All, gcfm.FP_All)
 	if err != nil {
 		return err
 	}
@@ -157,12 +157,12 @@ func (p *Program) SaveConfigs() error {
 		return err
 	}
 
-	err = os.MkdirAll(pd.ConfigDir, utfm.DP_All)
+	err = os.MkdirAll(pd.ConfigDir, gcfm.DP_All)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(pd.ConfigLoc, data, utfm.FP_All)
+	err = os.WriteFile(pd.ConfigLoc, data, gcfm.FP_All)
 	if err != nil {
 		return err
 	}
@@ -293,7 +293,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 //     will be kept.
 //   - The Help command will overwrite any other command with the same name.
 func (p *Program) SetCommands(cmds ...*Command) {
-	cmds = us.SliceFilter(cmds, FilterInvalidCmd)
+	cmds = gcslc.SliceFilter(cmds, FilterInvalidCmd)
 	if len(cmds) == 0 {
 		return
 	}

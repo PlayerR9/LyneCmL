@@ -3,7 +3,7 @@ package Parser
 import (
 	"strings"
 
-	cms "github.com/PlayerR9/LyneCmL/Simple"
+	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
 )
 
 type ErrFlagNotFound struct {

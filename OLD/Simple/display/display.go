@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"sync"
 
 	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	ufm "github.com/PlayerR9/MyGoLib/Utility/FileManager"
-	llq "github.com/PlayerR9/listlike/queue"
 	sfb "github.com/PlayerR9/safe/Buffer"
 )
 
@@ -22,7 +21,7 @@ type Display struct {
 
 	// history is a list of all the messages and interactions that have occurred
 	// in the display since it started or since the last clear.
-	history *llq.SafeQueue[string]
+	history *sfb.SafeQueue[string]
 
 	// wg is the wait group for the display.
 	wg sync.WaitGroup
@@ -51,7 +50,7 @@ func NewDisplay(config *DisplayConfigs, logger *log.Logger) *Display {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	buffer := sfb.NewBuffer[Msger]()
-	history := llq.NewSafeQueue[string]()
+	history := sfb.NewSafeQueue[string]()
 
 	return &Display{
 		ctx:     ctx,
@@ -132,38 +131,23 @@ func (d *Display) msgHandler(msg any) error {
 	case *ClearHistoryMsg:
 		d.history.Clear()
 	case *StoreHistoryMsg:
-		iter := d.history.Iterator()
-
-		fw := ufm.NewFileWriter(msg.loc)
-		err := fw.Create()
+		file, err := os.Create(msg.loc)
 		if err != nil {
 			return err
 		}
-		defer fw.Close()
+		defer file.Close()
 
-		for {
-			line, err := iter.Consume()
+		for _, line := range d.history.Slice() {
+			_, err := file.WriteString(line + "\n")
 			if err != nil {
-				break
-			}
-
-			err = fw.AppendLine(line)
-			if err != nil {
-				return err
+				return err // TODO: Use ErrWhile
 			}
 		}
 	case *AbruptExitMsg:
 		fmt.Println("History:")
 		fmt.Println()
 
-		iter := d.history.Iterator()
-
-		for {
-			line, err := iter.Consume()
-			if err != nil {
-				break
-			}
-
+		for _, line := range d.history.Slice() {
 			fmt.Println(line)
 		}
 
