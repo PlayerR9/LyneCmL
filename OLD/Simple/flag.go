@@ -3,8 +3,7 @@ package Simple
 import (
 	"fmt"
 	"strings"
-
-	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
 
 const (
@@ -140,10 +139,10 @@ func (f *Flag) Value() any {
 
 ///////////////////////////////////////////////////////
 
-// FString implements the FString.FStringer interface.
+/* // FString implements the FString.FStringer interface.
 func (f *Flag) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	panic("not implemented")
-}
+} */
 
 // GenerateUsage implements CmlComponent interface.
 //

@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"sync"
 
-	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
-	sfb "github.com/PlayerR9/safe/Buffer"
+	// fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
+	sfb "github.com/PlayerR9/safe/buffer"
 )
 
 ///////////////////////////////////////////////////////
@@ -113,21 +112,21 @@ func (d *Display) msgListener() {
 func (d *Display) msgHandler(msg any) error {
 	switch msg := msg.(type) {
 	case *TextMsg:
-		space := strings.Repeat(" ", d.configs.Spacing)
+		// space := strings.Repeat(" ", d.configs.Spacing)
 
-		str, _ := fs.FixTabStop(0, d.configs.TabSize, space, msg.text)
+		// str, _ := fs.FixTabStop(0, d.configs.TabSize, space, msg.text)
 
-		d.history.Enqueue(str)
+		// d.history.Enqueue(str)
 
-		fmt.Println(str)
+		// fmt.Println(str)
 	case *LogMsg:
-		space := strings.Repeat(" ", d.configs.Spacing)
+		// space := strings.Repeat(" ", d.configs.Spacing)
 
-		str, _ := fs.FixTabStop(0, d.configs.TabSize, space, msg.text)
+		// str, _ := fs.FixTabStop(0, d.configs.TabSize, space, msg.text)
 
-		d.history.Enqueue(str)
+		// d.history.Enqueue(str)
 
-		d.logger.Println(str)
+		// d.logger.Println(str)
 	case *ClearHistoryMsg:
 		d.history.Clear()
 	case *StoreHistoryMsg:

@@ -1,12 +1,10 @@
 package Simple
 
 import (
-	"fmt"
 	"strings"
 
 	cut "github.com/PlayerR9/LyneCml/OLD/Common/util"
-	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	uc "github.com/PlayerR9/lib_units/common"
+	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
 
 var (
@@ -30,46 +28,46 @@ func init() {
 		},
 		Argument: AtMostNArgs(1),
 		Run: func(p *Program, data any) error {
-			configs := p.Configs
+			// configs := p.Configs
 
-			printer, trav := ffs.NewStdPrinter(
+			/* printer, trav := ffs.NewStdPrinter(
 				ffs.NewFormatter(
 					ffs.NewIndentConfig(configs.GetTabStr(), 0),
 					ffs.NewFormatterConfig(configs.TabSize, configs.Spacing),
 				),
 			)
-
+			*/
 			args := data.([]string)
 
 			if len(args) == 0 {
-				err := p.FString(trav)
-				if err != nil {
-					return err
-				}
+				// err := p.FString(trav)
+				// if err != nil {
+				// 	return err
+				// }
 			} else {
 				// Display help of a specific command.
-				name := args[0]
+				// name := args[0]
 
-				command, ok := p.commands[name]
+				/* command, ok := p.commands[name]
 				if !ok {
-					return uc.NewErrInvalidUsage(
+					return gcers.NewErrInvalidUsage(
 						fmt.Errorf("command %q is not a valid command", name),
 						"Use command \"help\" to see the list of available commands",
 					)
-				}
+				} */
 
-				err := command.FString(trav, WithSpacing(configs.Spacing))
+				/* err := command.FString(trav, WithSpacing(configs.Spacing))
 				if err != nil {
 					return err
-				}
+				} */
 			}
 
-			pages := ffs.Stringfy(printer.GetPages(), 1)
+			// pages := ffs.Stringfy(printer.GetPages(), 1)
 
-			err := p.Println(strings.Join(pages, "\f"))
-			if err != nil {
-				return err
-			}
+			// err := p.Println(strings.Join(pages, "\f"))
+			// if err != nil {
+			// 	return err
+			// }
 
 			return nil
 		},

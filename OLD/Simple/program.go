@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
-	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
+	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	// fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	gcfm "github.com/PlayerR9/go-commons/file_manager"
 	gcslc "github.com/PlayerR9/go-commons/slices"
 )
@@ -97,12 +97,12 @@ func (p *Program) GenerateUsage() []string {
 // Returns:
 //   - error: An error if the configuration failed to load.
 func (p *Program) LoadConfigs() error {
-	ok, err := gcfm.FileExists(pd.ConfigLoc)
+	ok, err := gcfm.FileExists(pd.ConfigLoc, gcfm.WithFileExts(".json"))
 	if err != nil {
 		return err
 	}
 
-	f, err := gcfm.Create(pd.ConfigLoc, gcfm.DP_All, gcfm.FP_All)
+	f, err := os.Create(pd.ConfigLoc)
 	if err != nil {
 		return err
 	}
@@ -157,12 +157,12 @@ func (p *Program) SaveConfigs() error {
 		return err
 	}
 
-	err = os.MkdirAll(pd.ConfigDir, gcfm.DP_All)
+	err = os.Mkdir(pd.ConfigDir, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(pd.ConfigLoc, data, gcfm.FP_All)
+	err = os.WriteFile(pd.ConfigLoc, data, 0644)
 	if err != nil {
 		return err
 	}
@@ -171,16 +171,16 @@ func (p *Program) SaveConfigs() error {
 }
 
 ///////////////////////////////////////////////////////
-
+/*
 // FString implements the CmlComponent interface.
 func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
-	settings := &CommandFSSetting{
-		Spacing: " ",
-	}
+	// settings := &CommandFSSetting{
+	// 	Spacing: " ",
+	// }
 
-	for _, opt := range opts {
-		opt(settings)
-	}
+	// for _, opt := range opts {
+	// 	opt(settings)
+	// }
 
 	var err error
 
@@ -263,11 +263,11 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	if len(p.flags) > 0 {
 		ta.SetHead("Flags:")
 
-		for _, flag := range p.flags {
-			str := strings.Join(flag.Usages, settings.Spacing)
+		// for _, flag := range p.flags {
+		// 	str := strings.Join(flag.Usages, settings.Spacing)
 
-			ta.AddRow(str, flag.Brief)
-		}
+		// 	ta.AddRow(str, flag.Brief)
+		// }
 
 		ta.AlignColumn(0)
 
@@ -280,7 +280,7 @@ func (p *Program) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	}
 
 	return nil
-}
+} */
 
 // SetCommands sets the commands of the program.
 //

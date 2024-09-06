@@ -1,8 +1,8 @@
 package util
 
 import (
-	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	uo "github.com/PlayerR9/lib_units/object"
+	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	gcf "github.com/PlayerR9/go-commons/fixer"
 )
 
 // CmlComponent is a component of a CML program.
@@ -13,9 +13,9 @@ type CmlComponent interface {
 	//   - []string: The usage of the component.
 	GenerateUsage() []string
 
-	ffs.FStringer
+	// ffs.FStringer
 
-	uo.Fixer
+	gcf.Fixer
 }
 
 const (

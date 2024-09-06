@@ -3,8 +3,8 @@ package Simple
 import (
 	"strings"
 
-	ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
-	fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
+	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
+	// fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	us "github.com/PlayerR9/go-commons/slices"
 )
 
@@ -192,6 +192,7 @@ func (c *Command) SetFlags(flags ...*Flag) {
 	}
 }
 
+/*
 type CommandFSSetting struct {
 	Spacing string
 }
@@ -296,7 +297,7 @@ func (c *Command) FString(trav *ffs.Traversor, opts ...ffs.Option) error {
 	}
 
 	return nil
-}
+} */
 
 // AddSubCommand adds a sub-command to the command.
 //

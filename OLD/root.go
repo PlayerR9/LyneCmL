@@ -9,7 +9,6 @@ import (
 	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
 	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
 	gcers "github.com/PlayerR9/go-commons/errors"
-	luc "github.com/PlayerR9/lib_units/common"
 )
 
 // Fix is a function that fixes the program. This should be
@@ -109,7 +108,7 @@ func ExecuteProgram(p *cms.Program, args []string) error {
 			return
 		}
 
-		pe := luc.NewErrPanic(r)
+		pe := gcers.NewErrPanic(r)
 
 		err := p.Panic(pe)
 		if err != nil {
