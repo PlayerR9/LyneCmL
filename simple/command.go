@@ -14,6 +14,12 @@ type Command struct {
 	// Name is the name of the command.
 	Name string
 
+	// Brief is the brief of the command. Leave empty if not needed.
+	Brief string
+
+	// Description is the description of the command. Leave empty if not needed.
+	Description []string
+
 	// RunFunc is the function that runs the command.
 	RunFunc CmdRunFunc
 
@@ -22,6 +28,39 @@ type Command struct {
 
 	// flag_list is the list of flags of the command.
 	flag_list []*Flag
+}
+
+// HelpLines is a method that returns the help lines of the command.
+//
+// Returns:
+//   - []string: The help lines of the command.
+func (c Command) HelpLines() []string {
+	var lines []string
+
+	if c.Brief != "" {
+		lines = append(lines, c.Name+" — "+c.Brief)
+	} else {
+		lines = append(lines, c.Name)
+	}
+
+	lines = append(lines, "")
+
+	if len(c.Description) > 0 {
+		lines = append(lines, c.Description...)
+		lines = append(lines, "", "")
+	}
+
+	lines = append(lines, "Usage:")
+
+	arr := c.Usage()
+
+	if arr[1] != "" {
+		lines = append(lines, arr[0]+" "+arr[1])
+	} else {
+		lines = append(lines, arr[0])
+	}
+
+	return nil
 }
 
 // Fix is a method that fixes the command.
@@ -46,15 +85,15 @@ func (c *Command) Fix() error {
 // Usage is a method that returns the usage of the command.
 //
 // Returns:
-//   - string: The usage of the command.
-func (c Command) Usage() string {
+//   - [2]string: The usage of the command and the brief of the command.
+func (c Command) Usage() [2]string {
 	arg := c.Argument.String()
 
 	if arg == "" {
-		return c.Name
+		return [2]string{c.Name, c.Brief}
 	}
 
-	return c.Name + " " + arg
+	return [2]string{c.Name + " " + arg, c.Brief}
 }
 
 func (c *Command) AddFlag(flag *Flag) error {

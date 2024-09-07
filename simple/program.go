@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/PlayerR9/LyneCml/simple/internal"
+	fs "github.com/PlayerR9/go-commons/Formatting/strings"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
@@ -24,8 +25,54 @@ type Program struct {
 	// Brief is a brief description of the program. Leave empty if not needed.
 	Brief string
 
+	// Description is the description of the program. Leave empty if not needed.
+	Description []string
+
 	// command_list is the list of commands.
 	command_list map[string]*Command
+}
+
+// HelpLines is a method that returns the help lines of the program.
+//
+// Returns:
+//   - []string: The help lines of the program.
+func (p Program) HelpLines() []string {
+	var lines []string
+
+	if p.Brief != "" {
+		lines = append(lines, p.FullName+" — "+p.Brief)
+	} else {
+		lines = append(lines, p.FullName)
+	}
+
+	lines = append(lines, "")
+
+	if len(p.Description) > 0 {
+		lines = append(lines, p.Description...)
+		lines = append(lines, "", "")
+	}
+
+	lines = append(lines, "Usage:")
+
+	var all_commands [][]string
+
+	for _, cmd := range p.command_list {
+		arr := cmd.Usage()
+		arr[0] = p.Name + " " + arr[0]
+
+		all_commands = append(all_commands, []string{arr[0], arr[1]})
+	}
+
+	table, err := fs.TableEntriesAlign(all_commands, 3)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create table: %v", err))
+	}
+
+	for _, row := range table {
+		lines = append(lines, strings.Join(row, ""))
+	}
+
+	return nil
 }
 
 // Fix is a method that builds and fixes the program. Remember to call
@@ -51,31 +98,45 @@ func (p *Program) Fix() error {
 	}
 
 	help_cmd := &Command{
-		Name: "help",
-		RunFunc: func(p *Program, _ []string) error {
-			var lines []string
+		Name:  "help",
+		Brief: "Displays the help message.",
+		Description: NewDescription(
+			"The help command displays the help message for the program or for a specific command.",
+			"If no command is specified, the help command will display the help message for the program.",
+			"The help command is useful for getting help on the program or on a specific command.",
+		).
+			Build(),
+		RunFunc: func(p *Program, args []string) error {
+			if len(args) == 0 {
+				lines := p.HelpLines()
 
-			if p.Brief != "" {
-				lines = append(lines, p.FullName+" — "+p.Brief)
+				for _, line := range lines {
+					err := p.Print(line)
+					if err != nil {
+						return err
+					}
+				}
 			} else {
-				lines = append(lines, p.FullName)
-			}
+				name := args[0]
 
-			lines = append(lines, "")
-			lines = append(lines, "Usage:")
+				cmd, ok := p.command_list[name]
+				if !ok {
+					return fmt.Errorf("command %q not found", name)
+				}
 
-			for _, cmd := range p.command_list {
-				lines = append(lines, fmt.Sprintf("%s %s", p.Name, cmd.Usage()))
-			}
+				lines := cmd.HelpLines()
 
-			err := p.Print(strings.Join(lines, "\n"))
-			if err != nil {
-				return err
+				for _, line := range lines {
+					err := p.Print(line)
+					if err != nil {
+						return err
+					}
+				}
 			}
 
 			return nil
 		},
-		Argument: NoArguments,
+		Argument: AtMostNArgs("command", 1),
 	}
 
 	err := help_cmd.Fix()
