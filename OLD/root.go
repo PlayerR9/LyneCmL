@@ -116,11 +116,9 @@ func ExecuteProgram(p *cms.Program, args []string) error {
 		}
 	}()
 
-	for {
-		top, ok := list.Pop()
-		if !ok {
-			break
-		}
+	for len(list) > 0 {
+		top := list[len(list)-1]
+		list = list[:len(list)-1]
 
 		err := top.Execute(p)
 		if err != nil {

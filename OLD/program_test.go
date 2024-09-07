@@ -7,6 +7,7 @@ import (
 	"time"
 
 	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
+	cml "github.com/PlayerR9/LyneCml/simple"
 )
 
 // TestMakeProgram tests the MakeProgram function.
@@ -15,7 +16,7 @@ func TestMakeProgram(t *testing.T) {
 		LongName:    "test",
 		Brief:       "A test flag.",
 		Usages:      nil,
-		Description: NewDescription("This is a test flag.").Build(),
+		Description: cml.NewDescription("This is a test flag.").Build(),
 		Argument:    cms.DefaultFlagArgument,
 	}
 
@@ -92,7 +93,7 @@ func TestMakeProgram(t *testing.T) {
 	Program := &cms.Program{
 		Name:        "Test",
 		Brief:       "A test program.",
-		Description: NewDescription("This is a test program.").Build(),
+		Description: cml.NewDescription("This is a test program.").Build(),
 		Version:     "v0.1.10",
 	}
 
@@ -121,7 +122,7 @@ func TestHelpCommand(t *testing.T) {
 	Program := &cms.Program{
 		Name:        "Test",
 		Brief:       "A test program.",
-		Description: NewDescription("This is a test program.").Build(),
+		Description: cml.NewDescription("This is a test program.").Build(),
 		Version:     "v0.1.4",
 	}
 

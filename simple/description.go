@@ -1,4 +1,4 @@
-package LyneCmL
+package simple
 
 import (
 	"strings"
@@ -16,7 +16,7 @@ type DescBuilder struct {
 //   - lines: The lines of the description.
 //
 // Returns:
-//   - *Description: The new description.
+//   - *DescBuilder: The new description builder.
 func NewDescription(lines ...string) *DescBuilder {
 	return &DescBuilder{
 		lines: lines,
@@ -29,7 +29,7 @@ func NewDescription(lines ...string) *DescBuilder {
 //   - sections: The sections of the line.
 //
 // Returns:
-//   - *Description: The description.
+//   - *DescBuilder: The description.
 func (d *DescBuilder) AddLine(sections ...string) *DescBuilder {
 	d.lines = append(d.lines, strings.Join(sections, " "))
 
@@ -40,13 +40,11 @@ func (d *DescBuilder) AddLine(sections ...string) *DescBuilder {
 //
 // Returns:
 //   - []string: The description.
-func (d *DescBuilder) Build() []string {
-	linesCopy := make([]string, len(d.lines))
-	copy(linesCopy, d.lines)
+func (d DescBuilder) Build() []string {
+	line_copy := make([]string, len(d.lines))
+	copy(line_copy, d.lines)
 
-	d.Reset()
-
-	return linesCopy
+	return line_copy
 }
 
 // Reset resets the description.

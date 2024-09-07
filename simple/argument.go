@@ -3,8 +3,6 @@ package simple
 import (
 	"fmt"
 	"strings"
-
-	dbg "github.com/PlayerR9/go-debug/assert"
 )
 
 const (
@@ -284,8 +282,6 @@ func write_arg(name string) string {
 // Assertions:
 //   - n >= 0
 func write_n_args(name string, n int) string {
-	dbg.AssertThat("n", dbg.NewOrderedAssert(n).GreaterOrEqualThan(0)).Panic()
-
 	if n == 0 {
 		return ""
 	}

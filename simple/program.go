@@ -8,7 +8,6 @@ import (
 
 	"github.com/PlayerR9/LyneCml/simple/internal"
 	gcers "github.com/PlayerR9/go-commons/errors"
-	dbg "github.com/PlayerR9/go-debug/assert"
 )
 
 // Program is a struct that represents a program.
@@ -21,6 +20,9 @@ type Program struct {
 
 	// Version is the version of the program. Leave empty if not needed.
 	Version string
+
+	// Brief is a brief description of the program. Leave empty if not needed.
+	Brief string
 
 	// command_list is the list of commands.
 	command_list map[string]*Command
@@ -53,7 +55,12 @@ func (p *Program) Fix() error {
 		RunFunc: func(p *Program, _ []string) error {
 			var lines []string
 
-			lines = append(lines, p.FullName)
+			if p.Brief != "" {
+				lines = append(lines, p.FullName+" — "+p.Brief)
+			} else {
+				lines = append(lines, p.FullName)
+			}
+
 			lines = append(lines, "")
 			lines = append(lines, "Usage:")
 
@@ -72,7 +79,9 @@ func (p *Program) Fix() error {
 	}
 
 	err := help_cmd.Fix()
-	dbg.AssertErr(err, "help_cmd.Fix()")
+	if err != nil {
+		panic(fmt.Sprintf("failed to fix help command: %v", err))
+	}
 
 	p.command_list["help"] = help_cmd
 
@@ -91,7 +100,9 @@ func (p *Program) Fix() error {
 		}
 
 		err := version_cmd.Fix()
-		dbg.AssertErr(err, "version_cmd.Fix()")
+		if err != nil {
+			panic(fmt.Sprintf("failed to fix version command: %v", err))
+		}
 
 		p.command_list["version"] = version_cmd
 	}
@@ -113,6 +124,39 @@ func (p *Program) AddCommand(cmd *Command) {
 	}
 
 	p.command_list[cmd.Name] = cmd
+}
+
+// AddCommands is a convenience method that adds multiple commands to the
+// program. It is the same as calling AddCommand for each command.
+//
+// Parameters:
+//   - cmds: The commands to add.
+//
+// Returns:
+//   - error: An error if the command failed to fix.
+func (p *Program) AddCommands(cmds ...*Command) {
+	var top int
+
+	for i := 0; i < len(cmds); i++ {
+		if cmds[i] != nil {
+			cmds[top] = cmds[i]
+			top++
+		}
+	}
+
+	cmds = cmds[:top:top]
+
+	if len(cmds) == 0 {
+		return
+	}
+
+	if p.command_list == nil {
+		p.command_list = make(map[string]*Command)
+	}
+
+	for _, cmd := range cmds {
+		p.command_list[cmd.Name] = cmd
+	}
 }
 
 // Run is a method that runs the program.

@@ -10,7 +10,6 @@ import (
 	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
 	gcers "github.com/PlayerR9/go-commons/errors"
 	luch "github.com/PlayerR9/go-commons/runes"
-	lls "github.com/PlayerR9/go-commons/stack"
 )
 
 const (
@@ -334,14 +333,14 @@ func parseArguments(a *cms.Argument, flagMap map[string]*cms.Flag, args []string
 // Returns:
 //   - lls.Stacker[*cms.ExecProcess]: The list of commands to execute.
 //   - error: An error if the arguments failed to parse.
-func ParseArgs(commandMap map[string]*cms.Command, args []string) (lls.Stacker[*cms.ExecProcess], error) {
+func ParseArgs(commandMap map[string]*cms.Command, args []string) ([]*cms.ExecProcess, error) {
 	if len(args) == 0 {
 		return nil, errors.New("no arguments")
 	}
 
 	p := &Parser{
 		argsLeft: args,
-		execList: lls.NewStack[*cms.ExecProcess](),
+		execList: make([]*cms.ExecProcess, 0),
 	}
 
 	cmd, ok := commandMap[args[0]]
@@ -366,7 +365,7 @@ func ParseArgs(commandMap map[string]*cms.Command, args []string) (lls.Stacker[*
 type Parser struct {
 	argsLeft []string
 
-	execList *lls.Stack[*cms.ExecProcess]
+	execList []*cms.ExecProcess
 }
 
 // handleCmd handles the command by validating the arguments and running the command.
@@ -391,7 +390,7 @@ func (p *Parser) handleCmd(cmd *cms.Command) error {
 
 	p.argsLeft = parsed.argsLeft
 
-	p.execList.Push(elem)
+	p.execList = append(p.execList, elem)
 
 	return nil
 }
