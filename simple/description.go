@@ -29,8 +29,12 @@ func NewDescription(lines ...string) *DescBuilder {
 //   - sections: The sections of the line.
 //
 // Returns:
-//   - *DescBuilder: The description.
+//   - *DescBuilder: The description. Nil only if receiver is nil.
 func (d *DescBuilder) AddLine(sections ...string) *DescBuilder {
+	if d == nil {
+		return nil
+	}
+
 	d.lines = append(d.lines, strings.Join(sections, " "))
 
 	return d
@@ -49,9 +53,15 @@ func (d DescBuilder) Build() []string {
 
 // Reset resets the description.
 func (d *DescBuilder) Reset() {
-	for i := range d.lines {
-		d.lines[i] = ""
+	if d == nil {
+		return
 	}
 
-	d.lines = d.lines[:0]
+	if len(d.lines) > 0 {
+		for i := range d.lines {
+			d.lines[i] = ""
+		}
+
+		d.lines = d.lines[:0]
+	}
 }

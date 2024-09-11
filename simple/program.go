@@ -79,8 +79,12 @@ func (p Program) HelpLines() []string {
 // this method before running the program.
 //
 // Returns:
-//   - error: An error of type *errors.Err[ErrorCode] if there was an error.
+//   - error: An error of if the program could not be fixed.
 func (p *Program) Fix() error {
+	if p == nil {
+		return gcers.NilReceiver
+	}
+
 	p.Name = strings.TrimSpace(p.Name)
 	if p.Name == "" {
 		return errors.New("program name cannot be empty")
@@ -176,7 +180,7 @@ func (p *Program) Fix() error {
 // Parameters:
 //   - cmd: The command to add.
 func (p *Program) AddCommand(cmd *Command) {
-	if cmd == nil {
+	if p == nil || cmd == nil {
 		return
 	}
 
@@ -196,6 +200,10 @@ func (p *Program) AddCommand(cmd *Command) {
 // Returns:
 //   - error: An error if the command failed to fix.
 func (p *Program) AddCommands(cmds ...*Command) {
+	if p == nil {
+		return
+	}
+
 	var top int
 
 	for i := 0; i < len(cmds); i++ {
