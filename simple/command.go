@@ -142,7 +142,7 @@ func (c *Command) AddFlag(flag *Flag) error {
 //   - []string: The parsed arguments.
 //   - error: An error if the arguments are invalid.
 func (c Command) parse(args []string) ([]string, error) {
-	parsed, err := c.Argument.check(args)
+	parsed, err := c.Argument.Check(args)
 	if err != nil {
 		return nil, err
 	}

@@ -236,7 +236,7 @@ func BetweenArgs(name string, min, max int) *Argument {
 	}
 }
 
-// check is a helper function that checks the argument.
+// Check is a helper function that checks the argument.
 //
 // Parameters:
 //   - args: The arguments to check.
@@ -244,7 +244,7 @@ func BetweenArgs(name string, min, max int) *Argument {
 // Returns:
 //   - []string: The checked arguments.
 //   - error: An error if the arguments are invalid.
-func (a Argument) check(args []string) ([]string, error) {
+func (a Argument) Check(args []string) ([]string, error) {
 	if len(args) < a.min {
 		return nil, fmt.Errorf("expected at least %d arguments, got %d instead", a.min, len(args))
 	}

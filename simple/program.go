@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/PlayerR9/LyneCml/simple/internal"
+	ds "github.com/PlayerR9/display/screen"
 	fs "github.com/PlayerR9/go-commons/Formatting/strings"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
@@ -30,6 +31,9 @@ type Program struct {
 
 	// command_list is the list of commands.
 	command_list map[string]*Command
+
+	// screen is the screen of the program.
+	screen *ds.Screen
 }
 
 // HelpLines is a method that returns the help lines of the program.
@@ -172,6 +176,15 @@ func (p *Program) Fix() error {
 		p.command_list["version"] = version_cmd
 	}
 
+	if p.screen == nil {
+		screen, err := ds.NewScreen()
+		if err != nil {
+			return fmt.Errorf("failed to create screen: %w", err)
+		}
+
+		p.screen = screen
+	}
+
 	return nil
 }
 
@@ -236,6 +249,11 @@ func (p *Program) AddCommands(cmds ...*Command) {
 // Returns:
 //   - error: An error of type *errors.Err[ErrorCode] if there was an error.
 func (p Program) Run(args []string) error {
+	err := p.screen.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start screen: %w", err)
+	}
+
 	if len(args) < 2 {
 		return internal.NewErrMissingCommand()
 	}
@@ -307,7 +325,13 @@ func (p Program) Printf(format string, a ...any) error {
 //
 // Parameters:
 //   - err: The error that occurred. If nil, the program will exit with code 0.
-func DefaultExitSequence(err error) {
+func DefaultExitSequence(p *Program, err error) {
+	if p == nil {
+		// Handle this case
+	}
+
+	defer p.screen.Close()
+
 	var exit_code int
 
 	if err == nil {
