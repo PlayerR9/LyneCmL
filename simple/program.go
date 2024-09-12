@@ -10,6 +10,7 @@ import (
 	ds "github.com/PlayerR9/display/screen"
 	fs "github.com/PlayerR9/go-commons/Formatting/strings"
 	gcers "github.com/PlayerR9/go-commons/errors"
+	"github.com/gdamore/tcell"
 )
 
 // Program is a struct that represents a program.
@@ -32,7 +33,6 @@ type Program struct {
 	// command_list is the list of commands.
 	command_list map[string]*Command
 
-	// screen is the screen of the program.
 	screen *ds.Screen
 }
 
@@ -176,15 +176,6 @@ func (p *Program) Fix() error {
 		p.command_list["version"] = version_cmd
 	}
 
-	if p.screen == nil {
-		screen, err := ds.NewScreen()
-		if err != nil {
-			return fmt.Errorf("failed to create screen: %w", err)
-		}
-
-		p.screen = screen
-	}
-
 	return nil
 }
 
@@ -249,11 +240,6 @@ func (p *Program) AddCommands(cmds ...*Command) {
 // Returns:
 //   - error: An error of type *errors.Err[ErrorCode] if there was an error.
 func (p Program) Run(args []string) error {
-	err := p.screen.Start()
-	if err != nil {
-		return fmt.Errorf("failed to start screen: %w", err)
-	}
-
 	if len(args) < 2 {
 		return internal.NewErrMissingCommand()
 	}
@@ -321,17 +307,39 @@ func (p Program) Printf(format string, a ...any) error {
 	return nil
 }
 
+// SetCell is a method that sets the cell at the given x and y coordinates on the screen to the given character
+// with the given style.
+//
+// Parameters:
+//   - x: The x-coordinate of the cell to set.
+//   - y: The y-coordinate of the cell to set.
+//   - char: The character to set the cell to.
+//   - style: The style to set the cell to.
+func (p Program) DrawCell(x, y int, char rune, style tcell.Style) {
+	p.screen.SetCell(x, y, char, style)
+}
+
+// BgStyle returns the background style.
+//
+// Returns:
+//   - tcell.Style: The background style.
+func (p Program) BgStyle() tcell.Style {
+	return ds.BgStyle
+}
+
+// Height returns the height of the screen.
+//
+// Returns:
+//   - int: The height of the screen.
+func (p Program) Height() int {
+	return p.screen.Height()
+}
+
 // DefaultExitSequence is the default exit sequence for the program.
 //
 // Parameters:
 //   - err: The error that occurred. If nil, the program will exit with code 0.
-func DefaultExitSequence(p *Program, err error) {
-	if p == nil {
-		// Handle this case
-	}
-
-	defer p.screen.Close()
-
+func DefaultExitSequence(err error) {
 	var exit_code int
 
 	if err == nil {
