@@ -3,9 +3,9 @@ package simple
 import (
 	"os"
 
+	ds "github.com/PlayerR9/LyneCml/screen"
 	"github.com/PlayerR9/LyneCml/simple/internal"
 	cmls "github.com/PlayerR9/LyneCml/style"
-	ds "github.com/PlayerR9/display/screen"
 	gcers "github.com/PlayerR9/go-commons/errors"
 	"github.com/gdamore/tcell"
 )
@@ -81,14 +81,14 @@ func DefaultExitSequence(p *Program, err error) {
 
 	if err == nil {
 		for x, c := range []rune("Program ran successfully.") {
-			p.screen.SetCell(x, y, c, p.style.SuccessText)
+			p.screen.DrawCell(x, y, c, p.style.SuccessText)
 		}
 
 		y++
 		exit_code = 0
 	} else {
 		for x, c := range []rune(err.Error()) {
-			p.screen.SetCell(x, y, c, p.style.ErrorText)
+			p.screen.DrawCell(x, y, c, p.style.ErrorText)
 		}
 
 		y++
@@ -98,14 +98,14 @@ func DefaultExitSequence(p *Program, err error) {
 			y++
 
 			for x, c := range []rune("Suggestions:") {
-				p.screen.SetCell(x, y, c, p.style.NormalText)
+				p.screen.DrawCell(x, y, c, p.style.NormalText)
 			}
 
 			for _, suggestion := range err.Suggestions {
 				y++
 
 				for x, c := range []rune(suggestion) {
-					p.screen.SetCell(x+3, y, c, p.style.NormalText)
+					p.screen.DrawCell(x+3, y, c, p.style.NormalText)
 				}
 			}
 
@@ -120,7 +120,7 @@ func DefaultExitSequence(p *Program, err error) {
 	y++
 
 	for x, c := range []rune("Press ENTER to exit...") {
-		p.screen.SetCell(x, y, c, p.style.NormalText)
+		p.screen.DrawCell(x, y, c, p.style.NormalText)
 	}
 
 	for {

@@ -1,8 +1,6 @@
 package screen
 
 import (
-	"context"
-
 	dtb "github.com/PlayerR9/display/table"
 	gcers "github.com/PlayerR9/go-commons/errors"
 	gda "github.com/PlayerR9/go-debug/assert"
@@ -79,11 +77,7 @@ func (s *Screen) event_listener() {
 //
 // Returns:
 //   - error: The error if any.
-func (s *Screen) Start() (context.Context, error) {
-	k := DisplayKey("display")
-
-	ctx := context.WithValue(context.Background(), k, dt)
-
+func (s *Screen) Start() error {
 	if s == nil {
 		return gcers.NilReceiver
 	}
@@ -171,7 +165,7 @@ func (s *Screen) show_display() {
 
 	y := 0
 
-	for row := range s.dt.Row() {
+	for row := range s.dt.frame.Row() {
 		for x := 0; x < len(row); x++ {
 			cell := row[x]
 
@@ -238,7 +232,7 @@ func (s *Screen) Show(elem Drawer, x, y int) (int, int, error) {
 	var err error
 
 	if elem != nil {
-		err = elem.Draw(s, &x, &y)
+		err = elem.Draw(s.dt.buffer, &x, &y)
 	}
 
 	return x, y, err
@@ -284,7 +278,7 @@ func (s *Screen) Height() int {
 		return 0
 	}
 
-	return s.dt.Height()
+	return s.dt.frame.Height()
 }
 
 // Width returns the width of the screen.
@@ -296,7 +290,7 @@ func (s *Screen) Width() int {
 		return 0
 	}
 
-	return s.dt.Width()
+	return s.dt.frame.Width()
 }
 
 // BgStyle returns the background style.

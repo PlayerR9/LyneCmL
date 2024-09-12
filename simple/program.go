@@ -1,16 +1,18 @@
 package simple
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 
+	ds "github.com/PlayerR9/LyneCml/screen"
 	"github.com/PlayerR9/LyneCml/simple/internal"
 	cmls "github.com/PlayerR9/LyneCml/style"
-	ds "github.com/PlayerR9/display/screen"
 	fs "github.com/PlayerR9/go-commons/Formatting/strings"
 	gcers "github.com/PlayerR9/go-commons/errors"
 	"github.com/gdamore/tcell"
+	gc6
 )
 
 // Program is a struct that represents a program.
@@ -118,11 +120,16 @@ func (p *Program) Fix() error {
 			"The help command is useful for getting help on the program or on a specific command.",
 		).
 			Build(),
-		RunFunc: func(p *Program, args []string) error {
+		RunFunc: func(ctx context.Context, args []string) error {
 			if len(args) == 0 {
 				lines := p.HelpLines()
 
-				for _, line := range lines {
+				for i, line := range lines {
+					err := Do(ctx, NewActPrint(tcell.StyleDefault, line))
+					if err != nil {
+						return gcint.
+					}
+
 					err := p.Print(line)
 					if err != nil {
 						return err
@@ -161,7 +168,7 @@ func (p *Program) Fix() error {
 	if p.Version != "" {
 		version_cmd := &Command{
 			Name: "version",
-			RunFunc: func(p *Program, _ []string) error {
+			RunFunc: func(ctx context.Context, _ []string) error {
 				err := p.Print(p.Version)
 				if err != nil {
 					return err
@@ -244,6 +251,13 @@ func (p *Program) AddCommands(cmds ...*Command) {
 // Returns:
 //   - error: An error of type *errors.Err[ErrorCode] if there was an error.
 func (p *Program) Run(bg_style tcell.Style, args []string) error {
+	ctx := ds.NewContext(ds.WithDefaultStyle(bg_style))
+
+	err := ds.Run(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to run program: %w", err)
+	}
+
 	if len(args) < 2 {
 		return internal.NewErrMissingCommand()
 	}
@@ -283,41 +297,6 @@ func (p *Program) Run(bg_style tcell.Style, args []string) error {
 	return nil
 }
 
-// Print is a method that prints a message to the standard output with a newline.
-//
-// Parameters:
-//   - a: The arguments to print.
-//
-// Returns:
-//   - error: An error if the message could not be printed.
-func (p Program) Print(a ...any) error {
-	_, err := fmt.Println(a...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Printf is a method that prints a formatted message to the standard output with a newline.
-//
-// Parameters:
-//   - format: The format of the message.
-//   - a: The arguments to print.
-//
-// Returns:
-//   - error: An error if the message could not be printed.
-func (p Program) Printf(format string, a ...any) error {
-	a = append(a, "\n")
-
-	_, err := fmt.Printf(format, a...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // SetCell is a method that sets the cell at the given x and y coordinates on the screen to the given character
 // with the given style.
 //
@@ -330,13 +309,13 @@ func (p Program) DrawCell(x, y int, char rune, style tcell.Style) {
 
 }
 
-// BgStyle returns the background style.
+/* // BgStyle returns the background style.
 //
 // Returns:
 //   - tcell.Style: The background style.
 func (p Program) BgStyle() tcell.Style {
 	return ds.LightModeStyle
-}
+} */
 
 // Height returns the height of the screen.
 //

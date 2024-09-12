@@ -1,6 +1,7 @@
 package simple
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"unicode/utf8"
@@ -9,7 +10,7 @@ import (
 )
 
 // CmdRunFunc is a function that runs a command.
-type CmdRunFunc func(p *Program, args []string) error
+type CmdRunFunc func(ctx context.Context, args []string) error
 
 // Command is a struct that represents a command.
 type Command struct {
@@ -76,7 +77,7 @@ func (c *Command) Fix() error {
 	}
 
 	if c.RunFunc == nil {
-		c.RunFunc = func(_ *Program, _ []string) error {
+		c.RunFunc = func(_ context.Context, _ []string) error {
 			return nil
 		}
 	}
