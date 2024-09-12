@@ -3,10 +3,10 @@ package simple
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/PlayerR9/LyneCml/simple/internal"
+	cmls "github.com/PlayerR9/LyneCml/style"
 	ds "github.com/PlayerR9/display/screen"
 	fs "github.com/PlayerR9/go-commons/Formatting/strings"
 	gcers "github.com/PlayerR9/go-commons/errors"
@@ -35,6 +35,9 @@ type Program struct {
 
 	// screen is the screen of the program.
 	screen *ds.Screen
+
+	// style is the style of the program.
+	style cmls.Style[cmls.ColorType]
 }
 
 // HelpLines is a method that returns the help lines of the program.
@@ -324,7 +327,7 @@ func (p Program) Printf(format string, a ...any) error {
 //   - char: The character to set the cell to.
 //   - style: The style to set the cell to.
 func (p Program) DrawCell(x, y int, char rune, style tcell.Style) {
-	p.screen.SetCell(x, y, char, style)
+
 }
 
 // BgStyle returns the background style.
@@ -341,43 +344,4 @@ func (p Program) BgStyle() tcell.Style {
 //   - int: The height of the screen.
 func (p Program) Height() int {
 	return p.screen.Height()
-}
-
-// DefaultExitSequence is the default exit sequence for the program.
-//
-// Parameters:
-//   - err: The error that occurred. If nil, the program will exit with code 0.
-func DefaultExitSequence(p *Program, err error) {
-	if p == nil {
-		return
-	}
-
-	var exit_code int
-
-	if err == nil {
-		fmt.Println("Program ran successfully.")
-		exit_code = 0
-	} else {
-		fmt.Println(err.Error())
-
-		switch err := err.(type) {
-		case *gcers.Err[internal.ErrorCode]:
-			fmt.Println()
-			fmt.Println("Suggestions:")
-
-			for _, suggestion := range err.Suggestions {
-				fmt.Println("\t", suggestion)
-			}
-
-			exit_code = int(err.Code) + 2
-		default:
-			exit_code = 1
-		}
-	}
-
-	fmt.Println()
-	fmt.Println("Press ENTER to exit...")
-	fmt.Scanln()
-
-	os.Exit(exit_code)
 }
