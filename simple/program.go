@@ -33,6 +33,7 @@ type Program struct {
 	// command_list is the list of commands.
 	command_list map[string]*Command
 
+	// screen is the screen of the program.
 	screen *ds.Screen
 }
 
@@ -239,7 +240,7 @@ func (p *Program) AddCommands(cmds ...*Command) {
 //
 // Returns:
 //   - error: An error of type *errors.Err[ErrorCode] if there was an error.
-func (p Program) Run(args []string) error {
+func (p *Program) Run(bg_style tcell.Style, args []string) error {
 	if len(args) < 2 {
 		return internal.NewErrMissingCommand()
 	}
@@ -255,6 +256,13 @@ func (p Program) Run(args []string) error {
 		return internal.NewErrInvalidCommand(command)
 	}
 
+	screen, err := ds.NewScreen(bg_style)
+	if err != nil {
+		return fmt.Errorf("failed to create screen: %w", err)
+	}
+
+	p.screen = screen
+
 	args = args[2:]
 
 	parsed, err := cmd.parse(args)
@@ -264,7 +272,7 @@ func (p Program) Run(args []string) error {
 
 	// args_left := args[len(parsed):]
 
-	err = cmd.RunFunc(&p, parsed)
+	err = cmd.RunFunc(p, parsed)
 	if err != nil {
 		return fmt.Errorf("failed to run command: %w", err)
 	}
@@ -324,7 +332,7 @@ func (p Program) DrawCell(x, y int, char rune, style tcell.Style) {
 // Returns:
 //   - tcell.Style: The background style.
 func (p Program) BgStyle() tcell.Style {
-	return ds.BgStyle
+	return ds.LightModeStyle
 }
 
 // Height returns the height of the screen.
@@ -339,11 +347,15 @@ func (p Program) Height() int {
 //
 // Parameters:
 //   - err: The error that occurred. If nil, the program will exit with code 0.
-func DefaultExitSequence(err error) {
+func DefaultExitSequence(p *Program, err error) {
+	if p == nil {
+		return
+	}
+
 	var exit_code int
 
 	if err == nil {
-		fmt.Println("Done!")
+		fmt.Println("Program ran successfully.")
 		exit_code = 0
 	} else {
 		fmt.Println(err.Error())
