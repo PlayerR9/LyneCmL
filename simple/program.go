@@ -1,326 +1,266 @@
 package simple
 
 import (
-	"context"
-	"errors"
 	"fmt"
+	"iter"
+	"os"
+	"strconv"
 	"strings"
 
-	ds "github.com/PlayerR9/LyneCml/screen"
-	"github.com/PlayerR9/LyneCml/simple/internal"
-	cmls "github.com/PlayerR9/LyneCml/style"
-	fs "github.com/PlayerR9/go-commons/Formatting/strings"
+	uters "github.com/PlayerR9/LyneCml/PlayerR9/go-commons/errors"
 	gcers "github.com/PlayerR9/go-commons/errors"
-	"github.com/gdamore/tcell"
-	gc6
 )
 
 // Program is a struct that represents a program.
 type Program struct {
-	// FullName is the full name of the program.
-	FullName string
-
-	// Name is the name of the program. This is used when typing commands.
+	// Name is the name of the program.
 	Name string
 
-	// Version is the version of the program. Leave empty if not needed.
+	// Version is the version of the program.
 	Version string
 
-	// Brief is a brief description of the program. Leave empty if not needed.
-	Brief string
-
-	// Description is the description of the program. Leave empty if not needed.
-	Description []string
-
-	// command_list is the list of commands.
-	command_list map[string]*Command
-
-	// screen is the screen of the program.
-	screen *ds.Screen
-
-	// style is the style of the program.
-	style cmls.Style[cmls.ColorType]
+	// command_table is the table of commands.
+	command_table map[string]*Command
 }
 
-// HelpLines is a method that returns the help lines of the program.
-//
-// Returns:
-//   - []string: The help lines of the program.
-func (p Program) HelpLines() []string {
-	var lines []string
-
-	if p.Brief != "" {
-		lines = append(lines, p.FullName+" — "+p.Brief)
-	} else {
-		lines = append(lines, p.FullName)
-	}
-
-	lines = append(lines, "")
-
-	if len(p.Description) > 0 {
-		lines = append(lines, p.Description...)
-		lines = append(lines, "", "")
-	}
-
-	lines = append(lines, "Usage:")
-
-	var all_commands [][]string
-
-	for _, cmd := range p.command_list {
-		arr := cmd.Usage()
-		arr[0] = p.Name + " " + arr[0]
-
-		all_commands = append(all_commands, []string{arr[0], arr[1]})
-	}
-
-	table, err := fs.TableEntriesAlign(all_commands, 3)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create table: %v", err))
-	}
-
-	for _, row := range table {
-		lines = append(lines, strings.Join(row, ""))
-	}
-
-	return nil
-}
-
-// Fix is a method that builds and fixes the program. Remember to call
-// this method before running the program.
-//
-// Returns:
-//   - error: An error of if the program could not be fixed.
+// Fix implements the errors.Fixer interface.
 func (p *Program) Fix() error {
 	if p == nil {
 		return gcers.NilReceiver
 	}
 
-	p.Name = strings.TrimSpace(p.Name)
-	if p.Name == "" {
-		return errors.New("program name cannot be empty")
+	name := strings.TrimSpace(p.Name)
+	if name == "" {
+		return fmt.Errorf("name cannot be empty")
 	}
 
-	if p.command_list == nil {
-		p.command_list = make(map[string]*Command)
+	p.Name = name
+
+	p.Version = strings.TrimSpace(p.Version)
+
+	if p.command_table == nil {
+		p.command_table = make(map[string]*Command)
 	} else {
-		for k, cmd := range p.command_list {
-			err := cmd.Fix()
+		for k, cmd := range p.command_table {
+			err := uters.Fix("command "+strconv.Quote(k), cmd, false)
 			if err != nil {
-				return fmt.Errorf("failed to fix command %q: %w", k, err)
+				return err
 			}
 		}
 	}
 
-	help_cmd := &Command{
-		Name:  "help",
-		Brief: "Displays the help message.",
-		Description: NewDescription(
-			"The help command displays the help message for the program or for a specific command.",
-			"If no command is specified, the help command will display the help message for the program.",
-			"The help command is useful for getting help on the program or on a specific command.",
-		).
-			Build(),
-		RunFunc: func(ctx context.Context, args []string) error {
-			if len(args) == 0 {
-				lines := p.HelpLines()
-
-				for i, line := range lines {
-					err := Do(ctx, NewActPrint(tcell.StyleDefault, line))
-					if err != nil {
-						return gcint.
-					}
-
-					err := p.Print(line)
-					if err != nil {
-						return err
-					}
-				}
-			} else {
-				name := args[0]
-
-				cmd, ok := p.command_list[name]
-				if !ok {
-					return fmt.Errorf("command %q not found", name)
-				}
-
-				lines := cmd.HelpLines()
-
-				for _, line := range lines {
-					err := p.Print(line)
-					if err != nil {
-						return err
-					}
-				}
-			}
-
-			return nil
-		},
-		Argument: AtMostNArgs("command", 1),
-	}
-
-	err := help_cmd.Fix()
-	if err != nil {
-		panic(fmt.Sprintf("failed to fix help command: %v", err))
-	}
-
-	p.command_list["help"] = help_cmd
-
+	// Add version command if needed.
 	if p.Version != "" {
-		version_cmd := &Command{
-			Name: "version",
-			RunFunc: func(ctx context.Context, _ []string) error {
-				err := p.Print(p.Version)
-				if err != nil {
+		ok := p.HasCommand("version")
+		if !ok {
+			version_cmd := &Command{
+				Name: "version",
+				RunFn: func(p *Program, _ []string) error {
+					_, err := fmt.Println(p.Version)
 					return err
-				}
+				},
+				Argument: NoArguments,
+			}
 
-				return nil
-			},
-			Argument: NoArguments,
+			p.command_table["version"] = version_cmd
 		}
-
-		err := version_cmd.Fix()
-		if err != nil {
-			panic(fmt.Sprintf("failed to fix version command: %v", err))
-		}
-
-		p.command_list["version"] = version_cmd
 	}
 
 	return nil
 }
 
-// AddCommand adds a command to the program. Ignores nil commands.
+// AddCommands adds commands to the program.
 //
 // Parameters:
-//   - cmd: The command to add.
-func (p *Program) AddCommand(cmd *Command) {
-	if p == nil || cmd == nil {
+//   - commands: The commands to add.
+//
+// Nil commands are ignored.
+func (p *Program) AddCommands(commands ...*Command) {
+	if p == nil || len(commands) == 0 {
 		return
 	}
 
-	if p.command_list == nil {
-		p.command_list = make(map[string]*Command)
+	if p.command_table == nil {
+		p.command_table = make(map[string]*Command)
 	}
 
-	p.command_list[cmd.Name] = cmd
+	for _, command := range commands {
+		if command == nil {
+			continue
+		}
+
+		p.command_table[command.Name] = command
+	}
 }
 
-// AddCommands is a convenience method that adds multiple commands to the
-// program. It is the same as calling AddCommand for each command.
-//
-// Parameters:
-//   - cmds: The commands to add.
+// HasCommand checks if the program has a command with the given name.
 //
 // Returns:
-//   - error: An error if the command failed to fix.
-func (p *Program) AddCommands(cmds ...*Command) {
-	if p == nil {
-		return
+//   - bool: True if the program has a command with the given name, false otherwise.
+func (p Program) HasCommand(name string) bool {
+	if p.command_table == nil {
+		return false
 	}
 
-	var top int
+	_, ok := p.command_table[name]
+	return ok
+}
 
-	for i := 0; i < len(cmds); i++ {
-		if cmds[i] != nil {
-			cmds[top] = cmds[i]
-			top++
+// RetrieveCommand retrieves the command with the given name.
+//
+// Returns:
+//   - *Command: The command with the given name. Never returns nil.
+//   - bool: True if the program has a command with the given name, false otherwise.
+func (p Program) RetrieveCommand(name string) (*Command, bool) {
+	if p.command_table == nil {
+		return nil, false
+	}
+
+	cmd, ok := p.command_table[name]
+	if !ok {
+		return nil, false
+	}
+
+	return cmd, true
+}
+
+// Command is a method that returns an iterator of commands.
+//
+// Returns:
+//   - iter.Seq2[string, *Command]: The iterator of commands.
+func (p Program) Command() iter.Seq2[string, *Command] {
+	return func(yield func(string, *Command) bool) {
+		for k, cmd := range p.command_table {
+			if !yield(k, cmd) {
+				break
+			}
 		}
-	}
-
-	cmds = cmds[:top:top]
-
-	if len(cmds) == 0 {
-		return
-	}
-
-	if p.command_list == nil {
-		p.command_list = make(map[string]*Command)
-	}
-
-	for _, cmd := range cmds {
-		p.command_list[cmd.Name] = cmd
 	}
 }
 
 // Run is a method that runs the program.
 //
 // Parameters:
-//   - args: The arguments passed to the program. It should be os.Args.
+//   - args: The arguments to run the program with. This is os.Args.
 //
 // Returns:
-//   - error: An error of type *errors.Err[ErrorCode] if there was an error.
-func (p *Program) Run(bg_style tcell.Style, args []string) error {
-	ctx := ds.NewContext(ds.WithDefaultStyle(bg_style))
-
-	err := ds.Run(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to run program: %w", err)
-	}
-
+//   - error: The error that occurred. Never returns nil.
+func (p Program) Run(args []string) error {
 	if len(args) < 2 {
-		return internal.NewErrMissingCommand()
+		_, err := fmt.Println("Usage:", p.Name, "<cmd>")
+		if err != nil {
+			return err
+		}
+
+		_, err = fmt.Println("Use \"help\" command to see the list of available commands")
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	command := args[1]
 
-	if p.command_list == nil {
-		return gcers.NewErrInvalidUsage(errors.New("program is in an invalid state"), "Please call Fix() before calling Run()")
-	}
-
-	cmd, ok := p.command_list[command]
+	cmd, ok := p.command_table[command]
 	if !ok {
-		return internal.NewErrInvalidCommand(command)
+		_, err := fmt.Println("Unknown command: " + command)
+		if err != nil {
+			return err
+		}
+
+		_, err = fmt.Println("Use \"help\" command to see the list of available commands")
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	screen, err := ds.NewScreen(bg_style)
+	args, err := cmd.parse(args[2:])
 	if err != nil {
-		return fmt.Errorf("failed to create screen: %w", err)
+		return err
 	}
 
-	p.screen = screen
-
-	args = args[2:]
-
-	parsed, err := cmd.parse(args)
+	err = cmd.RunFn(&p, args)
 	if err != nil {
-		return fmt.Errorf("failed to parse command: %w", err)
-	}
-
-	// args_left := args[len(parsed):]
-
-	err = cmd.RunFunc(p, parsed)
-	if err != nil {
-		return fmt.Errorf("failed to run command: %w", err)
+		return fmt.Errorf("command %q failed: %w", command, err)
 	}
 
 	return nil
 }
 
-// SetCell is a method that sets the cell at the given x and y coordinates on the screen to the given character
-// with the given style.
+// Print is a method that prints the given arguments. A newline is added at the end.
 //
 // Parameters:
-//   - x: The x-coordinate of the cell to set.
-//   - y: The y-coordinate of the cell to set.
-//   - char: The character to set the cell to.
-//   - style: The style to set the cell to.
-func (p Program) DrawCell(x, y int, char rune, style tcell.Style) {
-
+//   - args: The arguments to print.
+//
+// Returns:
+//   - error: The error that occurred.
+func (p Program) Print(args ...any) error {
+	_, err := fmt.Println(args...)
+	return err
 }
 
-/* // BgStyle returns the background style.
+// Printf is a method that prints the given format and arguments. A newline is added at the end.
+//
+// Parameters:
+//   - format: The format to print.
+//   - args: The arguments to print.
 //
 // Returns:
-//   - tcell.Style: The background style.
-func (p Program) BgStyle() tcell.Style {
-	return ds.LightModeStyle
-} */
+//   - error: The error that occurred.
+func (p Program) Printf(format string, args ...any) error {
+	_, err := fmt.Printf(format+"\n", args...)
+	return err
+}
 
-// Height returns the height of the screen.
+// PrintNewline is a method that prints a newline.
 //
 // Returns:
-//   - int: The height of the screen.
-func (p Program) Height() int {
-	return p.screen.Height()
+//   - error: The error that occurred.
+func (p Program) PrintNewline() error {
+	_, err := fmt.Println()
+	return err
+}
+
+// DefaultExitSequence is a method that prints the given error and exits the program.
+//
+// Parameters:
+//   - err: The error to print.
+func DefaultExitSequence(err error) {
+	var exit_code int
+
+	if err == nil {
+		_, err := fmt.Println("Command ran successfully")
+		if err != nil {
+			panic(err)
+		}
+
+		exit_code = 0
+	} else {
+		_, err := fmt.Println(err.Error())
+		if err != nil {
+			panic(err)
+		}
+
+		exit_code = 1
+	}
+
+	_, err = fmt.Println()
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = fmt.Println("Press ENTER to exit...")
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = fmt.Scanln()
+	if err != nil {
+		panic(err)
+	}
+
+	os.Exit(exit_code)
 }
