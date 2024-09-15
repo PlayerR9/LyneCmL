@@ -4,8 +4,8 @@ go 1.23.1
 
 require (
 	github.com/PlayerR9/display v0.1.6
-	github.com/PlayerR9/go-commons v0.1.16
-	github.com/PlayerR9/go-debug v0.1.6
+	github.com/PlayerR9/go-commons v0.1.19
+	github.com/PlayerR9/go-debug v0.1.7
 	github.com/gdamore/tcell v1.4.0
 )
 
@@ -19,7 +19,7 @@ require (
 )
 
 require (
-	github.com/PlayerR9/safe v0.1.10
+	github.com/PlayerR9/safe v0.1.11
 	github.com/PlayerR9/table v0.1.13
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 )
