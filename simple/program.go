@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	uters "github.com/PlayerR9/LyneCml/PlayerR9/go-commons/errors"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
@@ -42,7 +41,7 @@ func (p *Program) Fix() error {
 		p.command_table = make(map[string]*Command)
 	} else {
 		for k, cmd := range p.command_table {
-			err := uters.Fix("command "+strconv.Quote(k), cmd, false)
+			err := gcers.Fix("command "+strconv.Quote(k), cmd, false)
 			if err != nil {
 				return err
 			}

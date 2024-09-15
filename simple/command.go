@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	uters "github.com/PlayerR9/LyneCml/PlayerR9/go-commons/errors"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
@@ -40,7 +39,7 @@ func (c *Command) Fix() error {
 	if c.Argument == nil {
 		c.Argument = NoArguments
 	} else {
-		err := uters.Fix("argument", c.Argument, false)
+		err := gcers.Fix("argument", c.Argument, false)
 		if err != nil {
 			return err
 		}
