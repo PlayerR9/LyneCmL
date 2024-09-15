@@ -3,7 +3,7 @@ package Simple
 import (
 	"strings"
 
-	cut "github.com/PlayerR9/LyneCml/OLD/Common/util"
+	cut "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Common/util"
 	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 )
 

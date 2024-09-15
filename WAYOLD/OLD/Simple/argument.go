@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PlayerR9/LyneCml/OLD/Common/util"
+	"github.com/PlayerR9/LyneCml/WAYOLD/OLD/Common/util"
 )
 
 var (

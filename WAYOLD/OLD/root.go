@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	prs "github.com/PlayerR9/LyneCml/OLD/Common/Parser"
-	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
-	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
+	prs "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Common/Parser"
+	cms "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Simple"
+	pd "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Simple/display"
 	gcers "github.com/PlayerR9/go-commons/errors"
 )
 

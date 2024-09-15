@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	cms "github.com/PlayerR9/LyneCml/OLD/Simple"
+	cms "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Simple"
 	gcers "github.com/PlayerR9/go-commons/errors"
 	luch "github.com/PlayerR9/go-commons/runes"
 )

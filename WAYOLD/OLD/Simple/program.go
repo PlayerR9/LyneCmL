@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
+	pd "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Simple/display"
 	// ffs "github.com/PlayerR9/MyGoLib/Formatting/FString"
 	// fs "github.com/PlayerR9/MyGoLib/Formatting/Strings"
 	gcfm "github.com/PlayerR9/go-commons/file_manager"

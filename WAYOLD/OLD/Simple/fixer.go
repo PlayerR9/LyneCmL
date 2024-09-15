@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode"
 
-	cut "github.com/PlayerR9/LyneCml/OLD/Common/util"
-	pd "github.com/PlayerR9/LyneCml/OLD/Simple/display"
+	cut "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Common/util"
+	pd "github.com/PlayerR9/LyneCml/WAYOLD/OLD/Simple/display"
 	gcch "github.com/PlayerR9/go-commons/runes"
 	gcslc "github.com/PlayerR9/go-commons/slices"
 )
