@@ -3,7 +3,7 @@ module github.com/PlayerR9/LyneCml
 go 1.23.1
 
 require (
-	github.com/PlayerR9/go-commons v0.1.20
+	github.com/PlayerR9/go-commons v0.1.21
 	github.com/gdamore/tcell v1.4.0
 )
 
