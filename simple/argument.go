@@ -3,8 +3,6 @@ package simple
 import (
 	"fmt"
 	"strings"
-
-	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
 var (
@@ -27,7 +25,7 @@ type Argument struct {
 // Fix implements the errors.Fixer interface.
 func (a *Argument) Fix() error {
 	if a == nil {
-		return gcers.NilReceiver
+		return nil
 	}
 
 	return nil

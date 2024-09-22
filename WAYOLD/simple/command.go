@@ -5,8 +5,6 @@ import (
 	"errors"
 	"strings"
 	"unicode/utf8"
-
-	gcers "github.com/PlayerR9/go-commons/errors"
 )
 
 // CmdRunFunc is a function that runs a command.
@@ -69,7 +67,7 @@ func (c Command) HelpLines() []string {
 // Fix is a method that fixes the command.
 func (c *Command) Fix() error {
 	if c == nil {
-		return gcers.NilReceiver
+		return nil
 	}
 
 	if c.Name == "" {

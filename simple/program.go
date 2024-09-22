@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	gcers "github.com/PlayerR9/go-commons/errors"
+	gcers "github.com/PlayerR9/errors"
 )
 
 // Program is a struct that represents a program.
@@ -38,7 +38,7 @@ func (p Program) Write(b []byte) (int, error) {
 // Fix implements the errors.Fixer interface.
 func (p *Program) Fix() error {
 	if p == nil {
-		return gcers.NilReceiver
+		return nil
 	}
 
 	name := strings.TrimSpace(p.Name)

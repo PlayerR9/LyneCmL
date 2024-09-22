@@ -1,5 +1,5 @@
-github.com/PlayerR9/go-commons v0.1.21 h1:YltpS6Uf/Qy5ArPCTcyRYLDqYuZWppfp/NRzgt6979A=
-github.com/PlayerR9/go-commons v0.1.21/go.mod h1:Abgs7CiggY1rhwwBPhv8G60HevRR1WMSVQVYfhIPgms=
+github.com/PlayerR9/errors v0.1.0 h1:EFbOeiweUdF4L4hNmQ446od0ET+PKqLWyO67KDWizCk=
+github.com/PlayerR9/errors v0.1.0/go.mod h1:vM52FOVFTyAAbyUWeP9CJVNHWRy8YAHyYic58wy6U2Y=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/encoding v1.0.1 h1:YzKZckdBL6jVt2Gc+5p82qhrGiqMdG/eNs6Wy0u3Uhw=
 github.com/gdamore/encoding v1.0.1/go.mod h1:0Z0cMFinngz9kS1QfMjCP8TY7em3bZYeeklsSDPivEo=

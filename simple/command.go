@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	gcers "github.com/PlayerR9/go-commons/errors"
+	gcers "github.com/PlayerR9/errors"
 )
 
 type CmdRunFn func(p *Program, args []string) error
@@ -18,7 +18,7 @@ type Command struct {
 
 func (c *Command) Fix() error {
 	if c == nil {
-		return gcers.NilReceiver
+		return nil
 	}
 
 	name := strings.TrimSpace(c.Name)
