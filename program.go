@@ -14,8 +14,14 @@ import (
 
 // Program is a collection of commands
 type Program struct {
+	// Name is the name of the program
+	Name string
+
 	// Version is the version of the program
 	Version string
+
+	// Brief is the brief description of the program
+	Brief string
 
 	// commands is a map of command names to command objects
 	commands *sets.OrderedSet[string, *Command]
@@ -34,6 +40,9 @@ func (p *Program) Fix() error {
 
 		return err
 	}
+
+	p.Name = strings.TrimSpace(p.Name)
+	p.Brief = strings.TrimSpace(p.Brief)
 
 	if p.commands == nil {
 		p.commands = sets.NewOrderedSet[string, *Command]()
@@ -167,7 +176,11 @@ func (p *Program) AddCommands(cmds ...*Command) {
 //
 // Returns:
 //   - error: Any error that may have occurred.
-func (p Program) Run(args []string) error {
+func (p *Program) Run(args []string) error {
+	if p == nil {
+		return nil
+	}
+
 	if len(args) < 2 {
 		fmt.Println("Use \"help\" for a list of commands")
 
@@ -175,6 +188,10 @@ func (p Program) Run(args []string) error {
 	}
 
 	command := args[1]
+
+	if p.Name == "" {
+		p.Name = args[0]
+	}
 
 	if p.commands == nil {
 		return fmt.Errorf("no commands")
@@ -187,7 +204,12 @@ func (p Program) Run(args []string) error {
 		return fmt.Errorf("unknown command: %s", command)
 	}
 
-	err := cmd.RunFn(&p, args[2:])
+	args, err := cmd.parse_args(args[2:])
+	if err != nil {
+		return fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	err = cmd.RunFn(p, args)
 	return err
 }
 

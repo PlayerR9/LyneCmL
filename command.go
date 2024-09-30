@@ -1,6 +1,9 @@
 package cml
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // RunFn is a function that runs the command.
 //
@@ -19,6 +22,9 @@ type Command struct {
 
 	// Brief is the brief description of the command.
 	Brief string
+
+	// Args is the arguments of the command.
+	Args *Argument
 
 	// RunFn is the function that runs the command.
 	RunFn RunFn
@@ -39,5 +45,29 @@ func (c *Command) Fix() error {
 		}
 	}
 
+	if c.Args == nil {
+		c.Args = NoArguments
+	}
+
 	return nil
+}
+
+// parse_args is a private function that parses the arguments.
+//
+// Parameters:
+//   - args: The arguments.
+//
+// Returns:
+//   - []string: The parsed arguments.
+//   - error: An error if the arguments could not be parsed.
+func (c Command) parse_args(args []string) ([]string, error) {
+	if c.Args.arg == "" {
+		return nil, nil
+	}
+
+	if len(args) == 0 {
+		return nil, fmt.Errorf("expected argument (%q), got nothing instead", c.Args.arg)
+	}
+
+	return args, nil
 }
