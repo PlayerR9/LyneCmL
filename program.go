@@ -35,8 +35,7 @@ func (p Program) Write(b []byte) (int, error) {
 // Fix implements the errors.Fixer interface.
 func (p *Program) Fix() error {
 	if p == nil {
-		err := gers.NewErrNilReceiver()
-		err.AddFrame("Fix()")
+		err := gers.NewErrNilReceiver("*Program.Fix()")
 
 		return err
 	}

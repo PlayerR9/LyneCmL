@@ -1,4 +1,4 @@
-github.com/PlayerR9/go-errors v0.1.4 h1:olpRtrxz1egOd+bWRQ7goEheMzfgOWGmBbFUNK7QJjM=
-github.com/PlayerR9/go-errors v0.1.4/go.mod h1:2VwKJC6VmrxsPABDs5MV6W1zEz5mxuHFb11hc6WKkBI=
-github.com/PlayerR9/go-sets v0.1.0 h1:wdvHYCoAnVpLcdnr1u7Ehzk4cXqoeL4u8MnwCxEs1J8=
-github.com/PlayerR9/go-sets v0.1.0/go.mod h1:xmc/P+AhdGdjt6TdQO/J/fWmmetK8Y/egLrX5cfAZLY=
+github.com/PlayerR9/go-errors v0.1.5 h1:+HRhcd/1rpfvMgr2HSyXN70W8p6SMTsutLII66mRq08=
+github.com/PlayerR9/go-errors v0.1.5/go.mod h1:2VwKJC6VmrxsPABDs5MV6W1zEz5mxuHFb11hc6WKkBI=
+github.com/PlayerR9/go-sets v0.1.1 h1:ypT3f41eFN9IpqIdI1jFSCdQ/V1UKDaZh5E4Q6vIPsc=
+github.com/PlayerR9/go-sets v0.1.1/go.mod h1:xmc/P+AhdGdjt6TdQO/J/fWmmetK8Y/egLrX5cfAZLY=
